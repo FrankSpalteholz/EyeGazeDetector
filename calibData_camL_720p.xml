@@ -1,0 +1,90 @@
+<?xml version="1.0"?>
+<opencv_storage>
+<KMatCam1 type_id="opencv-matrix">
+  <rows>3</rows>
+  <cols>3</cols>
+  <dt>d</dt>
+  <data>
+    6.997934480506110e+02 0 6.118285352361712e+02
+    0 7.003667753209148e+02 3.865502323941228e+02
+    0 0 1
+  </data></KMatCam1>
+<DistCoefCam1 type_id="opencv-matrix">
+  <rows>1</rows>
+  <cols>5</cols>
+  <dt>d</dt>
+  <data>
+    -0.046205565457803 0.217028309807389 0 0 -0.239830764193936
+  </data></DistCoefCam1>
+<KMatCam2 type_id="opencv-matrix">
+  <rows>3</rows>
+  <cols>3</cols>
+  <dt>d</dt>
+  <data>
+    6.975436607635601e+02 0 6.474038196070396e+02
+    0 6.981128165872050e+02 3.939521959899824e+02
+    0 0 1
+  </data></KMatCam2>
+<DistCoefCam2 type_id="opencv-matrix">
+  <rows>1</rows>
+  <cols>5</cols>
+  <dt>d</dt>
+  <data>
+    -0.024286575618244 0.114733533015902 0 0 -0.107098352125743
+  </data></DistCoefCam2>
+<RMat type_id="opencv-matrix">
+  <rows>3</rows>
+  <cols>3</cols>
+  <dt>d</dt>
+  <data>
+    0.999947590066264 0.003603901851046 -0.009582745541815
+    -0.003746213193634 0.999882349941973 -0.014874547429260
+    0.009528011722232 0.014909666862995 0.999843447158932
+  </data></RMat>
+<TMat type_id="opencv-matrix">
+  <rows>3</rows>
+  <cols>1</cols>
+  <dt>d</dt>
+  <data>
+    -62.528567652540490 0.235297678801103 0.402463549315030 </data></TMat>
+<EMat type_id="opencv-matrix">
+  <rows>3</rows>
+  <cols>3</cols>
+  <dt>d</dt>
+  <data>
+    -7.342047834303796e-04 0.998215381794883 0.469530691984309
+    -0.405924409459660 0.933730552249955 -62.520363173187654
+    -0.229274379128155 62.514921921843610 0.927829347448860
+  </data></EMat>
+<FMat type_id="opencv-matrix">
+  <rows>3</rows>
+  <cols>3</cols>
+  <dt>d</dt>
+  <data>
+    1.504097333841026e-09 2.043284189333383e-06 1.330264218069999e-04
+    8.308989992518688e-07 1.909723194134250e-06 -0.089482443692218
+    6.583761762437256e-06 0.087560108303956 0.533662874604538
+  </data></FMat>
+<KMatNormCam1 type_id="opencv-matrix">
+  <rows>3</rows>
+  <cols>3</cols>
+  <dt>d</dt>
+  <data>
+    1. 0. 0.
+    0. 1. 0.
+    0. 0. 1.</data></KMatNormCam1>
+<KMatNormCam2 type_id="opencv-matrix">
+  <rows>3</rows>
+  <cols>3</cols>
+  <dt>d</dt>
+  <data>
+    1. 0. 0.
+    0. 1. 0.
+    0. 0. 1.</data></KMatNormCam2>
+  <TMatNorm type_id="opencv-matrix">
+    <rows>3</rows>
+    <cols>1</cols>
+    <dt>d</dt>
+    <data>
+      0. 0. 0.</data></TMatNorm>
+</opencv_storage>
