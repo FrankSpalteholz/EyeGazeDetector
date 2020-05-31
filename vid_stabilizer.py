@@ -24,7 +24,8 @@ def smooth(trajectory, smoothing_radius):
     return smoothed_trajectory
 
 
-video_file = 'me_small.0001.mov'
+#video_file = 'me_small.0001.mov'
+video_file = 'footage/me/me.0002.mov'
 
 video_cap = cv2.VideoCapture(video_file)
 
@@ -34,8 +35,12 @@ video_height = int(video_cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
 video_fps = int(video_cap.get(cv2.CAP_PROP_FPS))
 
 video_out_codec = cv2.VideoWriter_fourcc(*'MJPG')
-video_out_compare = cv2.VideoWriter('me_small_out_compare.0001.avi', video_out_codec, video_fps, (2 * video_width, video_height))
-video_out_stabilized = cv2.VideoWriter('me_small_out_stabilized.0001.avi', video_out_codec, video_fps, (video_width, video_height))
+#video_out_compare = cv2.VideoWriter('me_small_out_compare.0001.avi', video_out_codec, video_fps, (2 * video_width, video_height))
+#video_out_stabilized = cv2.VideoWriter('me_small_out_stabilized.0001.avi', video_out_codec, video_fps, (video_width, video_height))
+
+
+#video_out_compare = cv2.VideoWriter('me_out_compare.0001.avi', video_out_codec, video_fps, (2 * video_width, video_height))
+video_out_stabilized = cv2.VideoWriter('me_out_stabilized.0001.avi', video_out_codec, video_fps, (video_width, video_height))
 
 print('_______________________________________________________________')
 print('Video file: ', video_file)
@@ -153,5 +158,5 @@ for i in range(video_frame_count - 2):
 
     cv2.imshow("Before and after stabilization", frame_out)
     cv2.waitKey(10)
-    video_out_compare.write(frame_out)
+    #video_out_compare.write(frame_out)
     video_out_stabilized.write(frame_stabilized)

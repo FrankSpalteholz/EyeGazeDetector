@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<opencv_storage>
+<KMatCam1 type_id="opencv-matrix">
+  <rows>3</rows>
+  <cols>3</cols>
+  <dt>d</dt>
+  <data>
+    1.4403e+03    0             537.7945
+    0             1.4414e+03    957.7105
+    0 0 1
+  </data></KMatCam1>
+<DistCoefCam1 type_id="opencv-matrix">
+  <rows>1</rows>
+  <cols>5</cols>
+  <dt>d</dt>
+  <data>
+    -0.046205565457803 0.217028309807389 0 0 -0.239830764193936
+  </data></DistCoefCam1>
+</opencv_storage>
