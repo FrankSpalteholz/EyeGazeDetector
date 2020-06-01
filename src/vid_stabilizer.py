@@ -1,6 +1,20 @@
 import cv2
 import numpy as np
 
+render_folder = '../render/me/'
+footage_folder = '../render/me/'
+
+footage_file_name = 'me_small_out_eye_tracked_dlib.0001.avi'
+render_file_name = 'me_out_eye_stabilized.0001.avi'
+render_file_name_compare = 'me_out_eye_compare.0001.avi'
+
+
+def fixBorder(frame):
+  s = frame.shape
+  # Scale the image 4% without moving the center
+  T = cv2.getRotationMatrix2D((s[1]/2, s[0]/2), 0, 1.04)
+  frame = cv2.warpAffine(frame, T, (s[1], s[0]))
+  return frame
 
 def movingAverage(curve, radius):
     window_size = 2 * radius + 1
@@ -24,10 +38,7 @@ def smooth(trajectory, smoothing_radius):
     return smoothed_trajectory
 
 
-#video_file = 'me_small.0001.mov'
-video_file = 'footage/me/me.0002.mov'
-
-video_cap = cv2.VideoCapture(video_file)
+video_cap = cv2.VideoCapture(footage_folder + footage_file_name)
 
 video_frame_count = int(video_cap.get(cv2.CAP_PROP_FRAME_COUNT))
 video_width = int(video_cap.get(cv2.CAP_PROP_FRAME_WIDTH))
@@ -35,16 +46,16 @@ video_height = int(video_cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
 video_fps = int(video_cap.get(cv2.CAP_PROP_FPS))
 
 video_out_codec = cv2.VideoWriter_fourcc(*'MJPG')
-#video_out_compare = cv2.VideoWriter('me_small_out_compare.0001.avi', video_out_codec, video_fps, (2 * video_width, video_height))
-#video_out_stabilized = cv2.VideoWriter('me_small_out_stabilized.0001.avi', video_out_codec, video_fps, (video_width, video_height))
 
+video_out_compare = cv2.VideoWriter(render_folder + render_file_name_compare, video_out_codec, video_fps, (2 * video_width, video_height))
+video_out_stabilized = cv2.VideoWriter(render_folder + render_file_name, video_out_codec, video_fps, (video_width, video_height))
 
-#video_out_compare = cv2.VideoWriter('me_out_compare.0001.avi', video_out_codec, video_fps, (2 * video_width, video_height))
-video_out_stabilized = cv2.VideoWriter('me_out_stabilized.0001.avi', video_out_codec, video_fps, (video_width, video_height))
+is_stabilize_rotation = False
 
 print('_______________________________________________________________')
-print('Video file: ', video_file)
+print('Video file: ', footage_folder + footage_file_name)
 print('Video width/height: ', video_width, ':', video_height)
+print('Stabilize Rotation: ', is_stabilize_rotation)
 print('_______________________________________________________________')
 
 _, frame = video_cap.read()
@@ -92,7 +103,12 @@ for i in range(video_frame_count - 2):
     dy = m[0][1, 2]
 
     # Extract rotation angle
-    da = np.arctan2(m[0][1, 0], m[0][0, 0])
+   # da = np.arctan2(m[0][1, 0], m[0][0, 0])
+
+    if not is_stabilize_rotation:
+        da = np.arctan2(m[0][1, 0], m[0][0, 0])*0
+    else:
+        da = np.arctan2(m[0][1, 0], m[0][0, 0])
 
     # Store transformation
     transforms[i] = [dx, dy, da]
@@ -147,7 +163,7 @@ for i in range(video_frame_count - 2):
     frame_stabilized = cv2.warpAffine(frame, m, (video_width, video_height))
 
     # Fix border artifacts
-    # frame_stabilized = fixBorder(frame_stabilized)
+    frame_stabilized = fixBorder(frame_stabilized)
 
     # Write the frame to the file
     frame_out = cv2.hconcat([frame, frame_stabilized])
@@ -158,5 +174,5 @@ for i in range(video_frame_count - 2):
 
     cv2.imshow("Before and after stabilization", frame_out)
     cv2.waitKey(10)
-    #video_out_compare.write(frame_out)
+    video_out_compare.write(frame_out)
     video_out_stabilized.write(frame_stabilized)
