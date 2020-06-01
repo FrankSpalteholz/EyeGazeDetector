@@ -4,7 +4,7 @@ from matplotlib import pyplot as plt
 
 
 
-video_file = 'render/me/me_out_stabilized.0001.avi'
+video_file = '../render/me/me_out_stabilized.0001.avi'
 video_cap = cv2.VideoCapture(video_file)
 
 video_frame_count = int(video_cap.get(cv2.CAP_PROP_FRAME_COUNT))
