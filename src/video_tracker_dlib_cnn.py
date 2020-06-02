@@ -4,12 +4,19 @@ import dlib
 import time
 import xml.etree.ElementTree as ET
 
-render_folder = '../render/me/'
-footage_folder = '../render/me/'
+#test_person = 'me'
+test_person = 'me02'
+#test_person = 'marie01'
+#test_person = 'marie02'
 
-footage_file_name = 'me_out_stabilized.0001.avi'
-render_file_name = 'me_small_out_tracked_damped_dlib.0001.avi'
-render_eye_file_name = 'me_small_out_eye_tracked_dlib.0002.avi'
+render_folder = '/Users/frankfurt/Dropbox/work/Aikia/EyeTracker/footage/render/' + test_person + '/'
+footage_folder = '/Users/frankfurt/Dropbox/work/Aikia/EyeTracker/footage/render/' + test_person + '/'
+
+#footage_folder = '/Users/frankfurt/Dropbox/work/Aikia/EyeTracker/footage/' + test_person + '/'
+
+footage_file_name = test_person + '_processed.0001.avi'
+render_file_name = test_person + '_tracked.0001.avi'
+render_eye_file_name = test_person + '_eye_tracked.0001.avi'
 
 predictor_file_path = 'config/shape_predictor_68_face_landmarks.dat'
 
@@ -18,13 +25,18 @@ global_offset_x = 0;
 curr_lmpoints_r_eye = []
 prev_lmpoints_r_eye = []
 
-offset_x = 40
-offset_y = 80
+offset_x = 50
+offset_y = 150
 damping = 0.25
-is_denoised = 0
-is_contrast_improved = 0
+is_denoised = 1
+is_contrast_improved = 1
 is_stabilized = 1
 scale = 1.0
+
+is_full_frame_render = 1
+is_eye_render = 1
+is_full_frame_show = 1
+is_eye_frame_show = 0
 
 
 video_cap = cv2.VideoCapture(footage_folder + footage_file_name)
@@ -41,6 +53,7 @@ video_out_tracked_dlib = cv2.VideoWriter(render_folder + render_file_name, video
 video_out_eye_tracked_dlib = cv2.VideoWriter()
 
 print('______________________________________________________________')
+print('Video to track: ', footage_file_name)
 print('Input video width: ', video_width)
 print('Input video height: ', video_height)
 print('______________________________________________________________')
@@ -75,19 +88,19 @@ for framenum in range((video_frame_count - 2)):
 
     frame = cv2.resize(frame, ( (int(video_width*scale), int(video_height*scale) )))
 
-    if is_contrast_improved:
-        # improve contrast by using clahe
-        lab = cv2.cvtColor(frame, cv2.COLOR_BGR2LAB)
-        l, a, b = cv2.split(lab)
-        clahe = cv2.createCLAHE(clipLimit=1.0, tileGridSize=(10, 10))
-        cl = clahe.apply(l)
-        limg = cv2.merge((cl, a, b))
-        frame = cv2.cvtColor(limg, cv2.COLOR_LAB2BGR)
-
-    if is_denoised:
-        # adding fast de-noiser
-        frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        frame = cv2.fastNlMeansDenoisingColored(frame, None, 5, 1, 7, 21)
+    # if is_contrast_improved:
+    #     # improve contrast by using clahe
+    #     lab = cv2.cvtColor(frame, cv2.COLOR_BGR2LAB)
+    #     l, a, b = cv2.split(lab)
+    #     clahe = cv2.createCLAHE(clipLimit=1.0, tileGridSize=(10, 10))
+    #     cl = clahe.apply(l)
+    #     limg = cv2.merge((cl, a, b))
+    #     frame = cv2.cvtColor(limg, cv2.COLOR_LAB2BGR)
+    #
+    # if is_denoised:
+    #     # adding fast de-noiser
+    #     frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+    #     frame = cv2.fastNlMeansDenoisingColored(frame, None, 5, 1, 7, 21)
 
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
@@ -142,29 +155,33 @@ for framenum in range((video_frame_count - 2)):
     for npoints in range(len(curr_lmpoints_r_eye)):
         cv2.circle(gray, (curr_lmpoints_r_eye[npoints][0], curr_lmpoints_r_eye[npoints][1]), 2, (255, 0, 0), -1)
 
+    font_color = (0,0,0)
     cv2.putText(gray, 'fps: ' + str(float("{:.2f}".format(1.0 / (time.time() - start_time)))), (10, 30),
-                cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1, cv2.LINE_AA)
+                cv2.FONT_HERSHEY_SIMPLEX, 0.5, font_color, 1, cv2.LINE_AA)
 
     cv2.putText(gray, 'damping: ' + str(float("{:.2f}".format(damping))), (10, 50),
-                cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1, cv2.LINE_AA)
+                cv2.FONT_HERSHEY_SIMPLEX, 0.5, font_color, 1, cv2.LINE_AA)
 
     cv2.putText(gray, 'denoised: ' + 'using NlMean ' + str(is_denoised), (10, 70),
-                cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1, cv2.LINE_AA)
+                cv2.FONT_HERSHEY_SIMPLEX, 0.5, font_color, 1, cv2.LINE_AA)
 
     cv2.putText(gray, 'contrast improved: ' + 'using CLAHE ' + str(is_contrast_improved), (10, 90),
-                cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1, cv2.LINE_AA)
+                cv2.FONT_HERSHEY_SIMPLEX, 0.5, font_color, 1, cv2.LINE_AA)
 
     cv2.putText(gray, 'stabilized: ' + str(is_stabilized), (10, 110),
-                cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1, cv2.LINE_AA)
+                cv2.FONT_HERSHEY_SIMPLEX, 0.5, font_color, 1, cv2.LINE_AA)
 
 
-    #cv2.imshow("face detection dlib", gray)
-    if framenum > 1:
-        cv2.imshow("face detection dlib", roi_r_eye_gray)
-        video_out_eye_tracked_dlib.write(cv2.cvtColor(roi_r_eye_gray, cv2.COLOR_GRAY2BGR))
+    if is_eye_render:
+        if framenum > 1:
+            if is_eye_frame_show:
+                cv2.imshow("eye detection dlib", roi_r_eye_gray)
+            video_out_eye_tracked_dlib.write(cv2.cvtColor(roi_r_eye_gray, cv2.COLOR_GRAY2BGR))
+
+    if is_full_frame_render:
+        if is_full_frame_show:
+            cv2.imshow("face detection dlib", gray)
+        video_out_tracked_dlib.write(cv2.cvtColor(gray, cv2.COLOR_GRAY2BGR))
 
     cv2.waitKey(1)
-    #video_out_tracked_dlib.write(cv2.cvtColor(gray, cv2.COLOR_GRAY2BGR))
-
-
 

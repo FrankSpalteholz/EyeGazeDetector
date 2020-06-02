@@ -1,17 +1,28 @@
 import cv2
 import numpy as np
 
-render_folder = '../render/me/'
-footage_folder = '../render/me/'
+#test_person = 'me'
+test_person = 'me02'
+#test_person = 'marie01'
+#test_person = 'marie02'
 
-footage_file_name = 'me_small_out_eye_tracked_dlib.0001.avi'
-render_file_name = 'me_out_eye_processed.0001.avi'
-render_file_name_compare = 'me_out_eye_compare.0001.avi'
+render_folder = '/Users/frankfurt/Dropbox/work/Aikia/EyeTracker/footage/render/' + test_person + '/'
 
-is_denoise_img = True
-is_improve_img_contrast = True
-is_render_compare = False
-is_stabilize_rotation = False
+footage_folder = '/Users/frankfurt/Dropbox/work/Aikia/EyeTracker/footage/render/' + test_person + '/'
+
+#footage_folder = '/Users/frankfurt/Dropbox/work/Aikia/EyeTracker/footage/' + test_person + '/'
+
+
+footage_file_name = test_person + '_eye_tracked.0001.avi'
+#render_file_name = test_person + '_processed.0001.avi'
+render_file_name = test_person + '_eye_tracked.0002.avi'
+render_file_name_compare = test_person + '_processed_compare_S100.0002.avi'
+
+is_BGR = False
+is_denoise_img = 0
+is_improve_img_contrast = 0
+is_render_compare = 1
+is_stabilize_rotation = 0
 
 def fix_img_border(frame):
   s = frame.shape
@@ -21,14 +32,14 @@ def fix_img_border(frame):
   return frame
 
 
-def movingAverage(curve, radius):
+def moving_average(curve, radius):
     window_size = 2 * radius + 1
     # Define the filter
-    f = np.ones(window_size) / window_size
+    filter = np.ones(window_size) / window_size
     # Add padding to the boundaries
     curve_pad = np.lib.pad(curve, (radius, radius), 'edge')
     # Apply convolution
-    curve_smoothed = np.convolve(curve_pad, f, mode='same')
+    curve_smoothed = np.convolve(curve_pad, filter, mode='same')
     # Remove padding
     curve_smoothed = curve_smoothed[radius:-radius]
     # return smoothed curve
@@ -39,7 +50,7 @@ def smooth_trajectory(trajectory, smoothing_radius):
     smoothed_trajectory = np.copy(trajectory)
     # Filter the x, y and angle curves
     for i in range(3):
-        smoothed_trajectory[:, i] = movingAverage(trajectory[:, i], smoothing_radius)
+        smoothed_trajectory[:, i] = moving_average(trajectory[:, i], smoothing_radius)
     return smoothed_trajectory
 
 
@@ -54,9 +65,10 @@ def improve_img_contrast(frame):
     return frame_out
 
 
-def img_denoise(frame):
+def img_denoise(frame, is_BGR):
     # adding fast de-noiser
-    frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+    if is_BGR:
+        frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
     frame_out = cv2.fastNlMeansDenoisingColored(frame, None, 5, 1, 7, 21)
     return frame_out
 
@@ -85,7 +97,6 @@ print('Contrast improve: ', is_improve_img_contrast)
 print('_______________________________________________________________')
 
 
-
 _, frame = video_cap.read()
 
 prev_gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
@@ -101,7 +112,6 @@ for i in range(video_frame_count - 2):
                                        qualityLevel=0.01,
                                        minDistance=30,
                                        blockSize=3)
-
     # Read next frame
     success, curr = video_cap.read()
     if not success:
@@ -150,7 +160,7 @@ for i in range(video_frame_count - 2):
     # cv2.waitKey(1)
 
 # // In frames. The larger the more stable the video, but less reactive to sudden panning
-SMOOTHING_RADIUS = 30;
+SMOOTHING_RADIUS = 100;
 
 # Compute trajectory using cumulative sum of transformations
 trajectory = np.cumsum(transforms, axis=0)
@@ -199,7 +209,7 @@ for i in range(video_frame_count - 2):
 
     if is_denoise_img:
         # denoise image
-        frame_processed = img_denoise(frame_processed)
+        frame_processed = img_denoise(frame_processed, is_BGR)
 
     if is_render_compare:
         # write the frame to the file
@@ -209,10 +219,11 @@ for i in range(video_frame_count - 2):
     # if (frame_out.shape[1] & gt; 1920):
     #     frame_out = cv2.resize(frame_out, (frame_out.shape[1] / 2, frame_out.shape[0] / 2));
 
-    cv2.imshow("Before and after stabilization", frame_out)
+    #cv2.imshow("Before and after stabilization", frame_processed)
     cv2.waitKey(10)
 
     if is_render_compare:
         video_out_compare.write(frame_out)
+        cv2.imshow("Before and after stabilization", frame_out)
 
     video_out_processed.write(frame_processed)
