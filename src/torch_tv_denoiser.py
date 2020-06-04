@@ -64,4 +64,5 @@ axs[1].axis('off')
 axs[1].set_title('Cleaned image')
 axs[1].imshow(img_clean)
 
+
 plt.show()

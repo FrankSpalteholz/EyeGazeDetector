@@ -4,6 +4,13 @@ import dlib
 import time
 import xml.etree.ElementTree as ET
 
+#_________________________________________________________________________________________________________
+
+
+
+
+
+
 #test_person = 'me'
 test_person = 'me02'
 #test_person = 'marie01'
@@ -27,17 +34,33 @@ prev_lmpoints_r_eye = []
 
 offset_x = 50
 offset_y = 150
-damping = 0.25
+damping = 1.0
 is_denoised = 1
 is_contrast_improved = 1
 is_stabilized = 1
-scale = 1.0
+scale = 0.5
 
 is_full_frame_render = 1
-is_eye_render = 1
+is_eye_render = 0
 is_full_frame_show = 1
 is_eye_frame_show = 0
 
+def display_infos(current_fps):
+    font_color = (0, 0, 0)
+    cv2.putText(gray, 'fps: ' + str(float("{:.2f}".format(current_fps))), (10, 30),
+                cv2.FONT_HERSHEY_SIMPLEX, 0.5, font_color, 1, cv2.LINE_AA)
+
+    cv2.putText(gray, 'roi_eye_damping: ' + str(float("{:.2f}".format(damping))), (10, 50),
+                cv2.FONT_HERSHEY_SIMPLEX, 0.5, font_color, 1, cv2.LINE_AA)
+
+    cv2.putText(gray, 'denoised: ' + 'using NlMean ' + str(is_denoised), (10, 70),
+                cv2.FONT_HERSHEY_SIMPLEX, 0.5, font_color, 1, cv2.LINE_AA)
+
+    cv2.putText(gray, 'contrast improved: ' + 'using CLAHE ' + str(is_contrast_improved), (10, 90),
+                cv2.FONT_HERSHEY_SIMPLEX, 0.5, font_color, 1, cv2.LINE_AA)
+
+    cv2.putText(gray, 'stabilized: ' + str(is_stabilized), (10, 110),
+                cv2.FONT_HERSHEY_SIMPLEX, 0.5, font_color, 1, cv2.LINE_AA)
 
 video_cap = cv2.VideoCapture(footage_folder + footage_file_name)
 
@@ -73,8 +96,8 @@ lmarks_right_eye = [36,37,38,39,40,41] # starting from outer corner -> up
 roi_r_eye_gray = frame
 
 # Write n_frames-1 transformed frames
-for framenum in range((video_frame_count - 2)):
-#for framenum in range(150):
+#for framenum in range((video_frame_count - 2)):
+for framenum in range(150):
 
     # start time of the loop
     start_time = time.time()
@@ -87,22 +110,6 @@ for framenum in range((video_frame_count - 2)):
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
     frame = cv2.resize(frame, ( (int(video_width*scale), int(video_height*scale) )))
-
-    # if is_contrast_improved:
-    #     # improve contrast by using clahe
-    #     lab = cv2.cvtColor(frame, cv2.COLOR_BGR2LAB)
-    #     l, a, b = cv2.split(lab)
-    #     clahe = cv2.createCLAHE(clipLimit=1.0, tileGridSize=(10, 10))
-    #     cl = clahe.apply(l)
-    #     limg = cv2.merge((cl, a, b))
-    #     frame = cv2.cvtColor(limg, cv2.COLOR_LAB2BGR)
-    #
-    # if is_denoised:
-    #     # adding fast de-noiser
-    #     frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-    #     frame = cv2.fastNlMeansDenoisingColored(frame, None, 5, 1, 7, 21)
-
-    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
     faces = detector(gray)
 
@@ -131,7 +138,6 @@ for framenum in range((video_frame_count - 2)):
         roi_r_eye_x = int(((float(prev_lmpoints_r_eye[3][0]) + float(curr_lmpoints_r_eye[3][0]))/2)) + offset_x
         roi_r_eye_y = int(((float(prev_lmpoints_r_eye[3][1]) + float(curr_lmpoints_r_eye[3][1]))/2)) + offset_y
 
-
         roi_r_eye_x2 = roi_r_eye_x - 2*offset_x - global_offset_x
         roi_r_eye_y2 = roi_r_eye_y - 2*offset_y
 
@@ -155,21 +161,9 @@ for framenum in range((video_frame_count - 2)):
     for npoints in range(len(curr_lmpoints_r_eye)):
         cv2.circle(gray, (curr_lmpoints_r_eye[npoints][0], curr_lmpoints_r_eye[npoints][1]), 2, (255, 0, 0), -1)
 
-    font_color = (0,0,0)
-    cv2.putText(gray, 'fps: ' + str(float("{:.2f}".format(1.0 / (time.time() - start_time)))), (10, 30),
-                cv2.FONT_HERSHEY_SIMPLEX, 0.5, font_color, 1, cv2.LINE_AA)
 
-    cv2.putText(gray, 'damping: ' + str(float("{:.2f}".format(damping))), (10, 50),
-                cv2.FONT_HERSHEY_SIMPLEX, 0.5, font_color, 1, cv2.LINE_AA)
-
-    cv2.putText(gray, 'denoised: ' + 'using NlMean ' + str(is_denoised), (10, 70),
-                cv2.FONT_HERSHEY_SIMPLEX, 0.5, font_color, 1, cv2.LINE_AA)
-
-    cv2.putText(gray, 'contrast improved: ' + 'using CLAHE ' + str(is_contrast_improved), (10, 90),
-                cv2.FONT_HERSHEY_SIMPLEX, 0.5, font_color, 1, cv2.LINE_AA)
-
-    cv2.putText(gray, 'stabilized: ' + str(is_stabilized), (10, 110),
-                cv2.FONT_HERSHEY_SIMPLEX, 0.5, font_color, 1, cv2.LINE_AA)
+    current_fps = 1.0 / (time.time() - start_time)
+    display_infos(current_fps)
 
 
     if is_eye_render:

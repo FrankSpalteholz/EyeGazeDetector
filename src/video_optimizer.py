@@ -13,16 +13,19 @@ footage_folder = '/Users/frankfurt/Dropbox/work/Aikia/EyeTracker/footage/render/
 #footage_folder = '/Users/frankfurt/Dropbox/work/Aikia/EyeTracker/footage/' + test_person + '/'
 
 
-footage_file_name = test_person + '_eye_tracked.0001.avi'
-#render_file_name = test_person + '_processed.0001.avi'
-render_file_name = test_person + '_eye_tracked.0002.avi'
-render_file_name_compare = test_person + '_processed_compare_S100.0002.avi'
+#footage_file_name = test_person + '_eye_tracked.0001.avi'
+render_file_name = test_person + '_processed.0002.avi'
+footage_file_name = test_person + '_processed.0001.avi'
+#render_file_name = test_person + '_eye_tracked.0002.avi'
+render_file_name_compare = test_person + '_processed_full_compare.0002.avi'
 
 is_BGR = False
 is_denoise_img = 0
 is_improve_img_contrast = 0
-is_render_compare = 1
-is_stabilize_rotation = 0
+is_render_compare = 0
+is_stabilize_rotation = 1
+# // In frames. The larger the more stable the video, but less reactive to sudden panning
+SMOOTHING_RADIUS = 100;
 
 def fix_img_border(frame):
   s = frame.shape
@@ -159,8 +162,7 @@ for i in range(video_frame_count - 2):
     # cv2.imshow("Frame", prev_gray)
     # cv2.waitKey(1)
 
-# // In frames. The larger the more stable the video, but less reactive to sudden panning
-SMOOTHING_RADIUS = 100;
+
 
 # Compute trajectory using cumulative sum of transformations
 trajectory = np.cumsum(transforms, axis=0)
