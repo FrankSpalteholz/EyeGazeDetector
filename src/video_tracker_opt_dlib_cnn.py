@@ -2,33 +2,35 @@ import cv2
 import numpy as np
 import dlib
 import time
+import os
 import xml.etree.ElementTree as ET
 import matplotlib.pyplot as plt
+
 plt.style.use('seaborn-whitegrid')
 from scipy.optimize import curve_fit
 
-#_________________________________________________________________________________________________________
+# _________________________________________________________________________________________________________
 
 
-#test_person = 'me'
+# test_person = 'me'
 test_person = 'me02'
-#test_person = 'marie01'
-#test_person = 'marie02'
+# test_person = 'marie01'
+# test_person = 'marie02'
 
-render_folder = '/Users/frankfurt/Dropbox/work/Aikia/EyeTracker/footage/render/' + test_person + '/'
-footage_folder = '/Users/frankfurt/Dropbox/work/Aikia/EyeTracker/footage/render/' + test_person + '/'
+#render_folder = '/Users/frankfurt/Dropbox/work/Aikia/EyeTracker/footage/render/' + test_person + '/'
+#footage_folder = '/Users/frankfurt/Dropbox/work/Aikia/EyeTracker/footage/render/' + test_person + '/'
 
-#footage_folder = '/Users/frankfurt/Dropbox/work/Aikia/EyeTracker/footage/' + test_person + '/'
+# footage_folder = '/Users/frankfurt/Dropbox/work/Aikia/EyeTracker/footage/' + test_person + '/'
 
-footage_file_name = test_person + '_processed.0001.avi'
+footage_file_name = test_person + '_processed.0002.avi'
 render_file_name = test_person + '_tracked.0001.avi'
 render_l_eye_file_name = test_person + '_eye_l_tracked.0001.avi'
 render_r_eye_file_name = test_person + '_eye_r_tracked.0001.avi'
 
 predictor_file_path = 'config/shape_predictor_68_face_landmarks.dat'
 
-lmarks_left_eye = [42,43,44,45,46,47] # starting from inner corner -> up
-lmarks_right_eye = [36,37,38,39,40,41] # starting from outer corner -> up
+lmarks_left_eye = [42, 43, 44, 45, 46, 47]  # starting from inner corner -> up
+lmarks_right_eye = [36, 37, 38, 39, 40, 41]  # starting from outer corner -> up
 
 curr_lmpoints_r_eye_x = []
 curr_lmpoints_r_eye_y = []
@@ -50,6 +52,7 @@ is_eye_render = 1
 is_full_frame_show = 0
 is_eye_frame_show = 1
 
+
 def display_infos(current_fps):
     font_color = (0, 0, 0)
     cv2.putText(gray, 'fps: ' + str(float("{:.2f}".format(current_fps))), (10, 30),
@@ -67,49 +70,50 @@ def display_infos(current_fps):
     cv2.putText(gray, 'stabilized: ' + str(is_stabilized), (10, 110),
                 cv2.FONT_HERSHEY_SIMPLEX, 0.5, font_color, 1, cv2.LINE_AA)
 
-def lin_smooth(data, stop, iterations):
 
+def lin_smooth(data, stop, iterations):
     for it in range(iterations):
         for n in range(stop - 2):
             if n > 1:
                 data[n] = ((data[n - 2] + data[n - 1] + data[n] + data[n + 1] + data[n + 2]) / 5)
     return data
 
+
 def calc_eyes_roi(track_data_l, track_data_r, timestep, roi_offset_x, roi_offset_y):
     roi_list = []
     tmp_list = []
-    #roi_r_eye_x \
+    # roi_r_eye_x \
     tmp_list.append(int(track_data_r[0][timestep] - roi_offset_x))
-    #roi_r_eye_y \
+    # roi_r_eye_y \
     tmp_list.append(int(track_data_r[1][timestep] - roi_offset_y))
     roi_list.append(tmp_list)
 
     tmp_list = []
-    #roi_l_eye_x \
+    # roi_l_eye_x \
     tmp_list.append(int(track_data_l[0][timestep] + roi_offset_x))
-    #roi_l_eye_y \
+    # roi_l_eye_y \
     tmp_list.append(int(track_data_l[1][timestep] - roi_offset_y))
     roi_list.append(tmp_list)
 
     tmp_list = []
-    #roi_r_eye_x2 \
+    # roi_r_eye_x2 \
     tmp_list.append(int(track_data_r[0][timestep] + roi_offset_x / 5))
-    #roi_r_eye_y2 \
+    # roi_r_eye_y2 \
     tmp_list.append(int(track_data_r[1][timestep] + roi_offset_y))
     roi_list.append(tmp_list)
 
     tmp_list = []
-    #roi_l_eye_x2 \
+    # roi_l_eye_x2 \
     tmp_list.append(int(track_data_l[0][timestep] - roi_offset_x / 5))
 
-    #roi_l_eye_y2 \
+    # roi_l_eye_y2 \
     tmp_list.append(int(track_data_l[1][timestep] + roi_offset_y))
     roi_list.append(tmp_list)
 
     return roi_list
 
-def display_track_shapes(img, framenum, data_r_track, data_l_track, roi_eyes_pos):
 
+def display_track_shapes(img, framenum, data_r_track, data_l_track, roi_eyes_pos):
     cv2.circle(img, (int(data_r_track[0][framenum]), int(data_r_track[1][framenum])), 4, (255, 255, 255), -1)
     cv2.circle(img, (int(data_l_track[0][framenum]), int(lmark_l_eye_track_y[framenum])), 4, (255, 255, 255), -1)
 
@@ -132,6 +136,27 @@ def display_track_shapes(img, framenum, data_r_track, data_l_track, roi_eyes_pos
                   (255, 255, 255), 1)
 
 
+def set_paths(sub_folder):
+    output_path = ''
+    input_path = ''
+    if os.name == 'nt':
+        print("Running system is Win10")
+        output_path = r'D:\\Dropbox\\work\\Aikia\\EyeTracker\\footage\\render\\' + sub_folder + r'\\'
+        # output_path = r'D:\\Dropbox\\work\\Aikia\\EyeTracker\\footage\\render\\' + sub_folder + r'\\'
+        #input_path = r'D:\\Dropbox\\work\\Aikia\\EyeTracker\\footage\\' + sub_folder + r'\\'
+        input_path = r'D:\\Dropbox\\work\\Aikia\\EyeTracker\\footage\\render\\' + sub_folder + r'\\'
+
+    elif os.name == 'posix':
+        print("Running system is OSX")
+        output_path = '/Users/frankfurt/Dropbox/work/Aikia/EyeTracker/footage/render/' + sub_folder + '/'
+        input_path = '/Users/frankfurt/Dropbox/work/Aikia/EyeTracker/footage/render/' + sub_folder + '/'
+        # input_path = '/Users/frankfurt/Dropbox/work/Aikia/EyeTracker/footage/' + sub_folder + '/'
+
+    return input_path, output_path
+
+
+footage_folder, render_folder = set_paths(test_person)
+
 video_cap = cv2.VideoCapture(footage_folder + footage_file_name)
 
 video_frame_count = int(video_cap.get(cv2.CAP_PROP_FRAME_COUNT))
@@ -141,7 +166,7 @@ video_fps = int(video_cap.get(cv2.CAP_PROP_FPS))
 
 video_out_codec = cv2.VideoWriter_fourcc(*'MJPG')
 video_out_tracked = cv2.VideoWriter(render_folder + render_file_name, video_out_codec, video_fps,
-                                         (int(video_width*scale), int(video_height*scale)))
+                                    (int(video_width * scale), int(video_height * scale)))
 
 video_out_eye_l_tracked = cv2.VideoWriter()
 video_out_eye_r_tracked = cv2.VideoWriter()
@@ -162,18 +187,18 @@ roi_l_eye_frame = frame
 # reset stream to first frame
 video_cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
 
-#______________________________________________________________________________________________
+# ______________________________________________________________________________________________
 # face landmark detection
 
 for framenum in range((video_frame_count - 2)):
-#for framenum in range(100):
+    # for framenum in range(100):
 
     start_time = time.time()
 
     success, frame = video_cap.read()
     if not success:
         break
-    frame = cv2.resize(frame, ( (int(video_width*scale), int(video_height*scale) )))
+    frame = cv2.resize(frame, ((int(video_width * scale), int(video_height * scale))))
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
     faces = detector(gray)
@@ -184,17 +209,15 @@ for framenum in range((video_frame_count - 2)):
         curr_lmpoints_l_eye_x.append(landmarks.part(lmarks_left_eye[0]).x)
         curr_lmpoints_l_eye_y.append(landmarks.part(lmarks_left_eye[0]).y)
 
-
-#______________________________________________________________________________________________
+# ______________________________________________________________________________________________
 
 x = curr_lmpoints_r_eye_x.copy()
 y = curr_lmpoints_r_eye_y.copy()
 
-lmark_r_eye_track_x = lin_smooth(curr_lmpoints_r_eye_x,framenum,9)
-lmark_r_eye_track_y = lin_smooth(curr_lmpoints_r_eye_y,framenum,9)
-lmark_l_eye_track_x = lin_smooth(curr_lmpoints_l_eye_x,framenum,9)
-lmark_l_eye_track_y = lin_smooth(curr_lmpoints_l_eye_y,framenum,9)
-
+lmark_r_eye_track_x = lin_smooth(curr_lmpoints_r_eye_x, framenum, 9)
+lmark_r_eye_track_y = lin_smooth(curr_lmpoints_r_eye_y, framenum, 9)
+lmark_l_eye_track_x = lin_smooth(curr_lmpoints_l_eye_x, framenum, 9)
+lmark_l_eye_track_y = lin_smooth(curr_lmpoints_l_eye_y, framenum, 9)
 
 fig, axs = plt.subplots(2)
 fig.suptitle('x-y motion landmark[3]')
@@ -203,14 +226,14 @@ axs[1].plot(y, 'tab:green', lmark_r_eye_track_y, 'tab:orange')
 
 plt.show()
 
-#_____________________________________________________________________________________________
+# _____________________________________________________________________________________________
 
 # Reset stream to first frame
 video_cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
 
 # Write n_frames-1 transformed frames
 for framenum in range(video_frame_count - 4):
-#for framenum in range(94):
+    # for framenum in range(94):
     # Read next frame
     success, frame = video_cap.read()
     if not success:
@@ -220,13 +243,11 @@ for framenum in range(video_frame_count - 4):
 
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
-
-
-    roi_eyes_pos = calc_eyes_roi((lmark_l_eye_track_x,lmark_l_eye_track_y), (lmark_r_eye_track_x, lmark_r_eye_track_y),
+    roi_eyes_pos = calc_eyes_roi((lmark_l_eye_track_x, lmark_l_eye_track_y), (lmark_r_eye_track_x, lmark_r_eye_track_y),
                                  framenum, roi_eye_offset_x, roi_eye_offset_y)
 
     display_track_shapes(frame, framenum, (lmark_r_eye_track_x, lmark_r_eye_track_y),
-                         (lmark_l_eye_track_x,lmark_l_eye_track_y), roi_eyes_pos)
+                         (lmark_l_eye_track_x, lmark_l_eye_track_y), roi_eyes_pos)
 
     print(roi_eyes_pos)
 
@@ -235,16 +256,14 @@ for framenum in range(video_frame_count - 4):
 
     eye_rect_size = [abs(roi_eyes_pos[0][0] - roi_eyes_pos[2][0]), abs(roi_eyes_pos[0][1] - roi_eyes_pos[2][1])]
 
-    #print(eye_rect_size)
+    # print(eye_rect_size)
 
-    #print(eye_tracking_rect_size)
+    # print(eye_tracking_rect_size)
     if framenum == 1:
         video_out_eye_l_tracked = cv2.VideoWriter(render_folder + render_l_eye_file_name,
-                                                    video_out_codec, video_fps, (eye_rect_size[0], eye_rect_size[1]))
+                                                  video_out_codec, video_fps, (eye_rect_size[0], eye_rect_size[1]))
         video_out_eye_r_tracked = cv2.VideoWriter(render_folder + render_r_eye_file_name,
-                                                    video_out_codec, video_fps, (eye_rect_size[0], eye_rect_size[1]))
-
-
+                                                  video_out_codec, video_fps, (eye_rect_size[0], eye_rect_size[1]))
 
     # #
     # #     roi_r_eye_x += int(((int(((float(prev_lmpoints_r_eye[3][0]) + float(curr_lmpoints_r_eye[3][0])) / 2)) + roi_eye_offset_x) - roi_r_eye_x) * roi_eye_damping)
@@ -260,7 +279,7 @@ for framenum in range(video_frame_count - 4):
         if framenum > 1:
             if is_eye_frame_show:
                 cv2.imshow("eye detection dlib", cv2.hconcat([roi_r_eye_frame, roi_l_eye_frame]))
-                #cv2.imshow("eye detection dlib", roi_l_eye_frame)
+                # cv2.imshow("eye detection dlib", roi_l_eye_frame)
             video_out_eye_r_tracked.write(cv2.cvtColor(roi_r_eye_frame, cv2.COLOR_GRAY2BGR))
             video_out_eye_l_tracked.write(cv2.cvtColor(roi_l_eye_frame, cv2.COLOR_GRAY2BGR))
 
@@ -270,4 +289,3 @@ for framenum in range(video_frame_count - 4):
         video_out_tracked.write(frame)
 
     cv2.waitKey(1)
-

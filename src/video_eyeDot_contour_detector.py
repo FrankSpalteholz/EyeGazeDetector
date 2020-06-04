@@ -1,4 +1,5 @@
 import cv2
+import os
 import numpy as np
 
 #draw_mobile_grid(roi, int(58*scale), int(104*scale), 1.0, (int(58*scale), int(135*scale)), 7, 4, True, color_traj, 1)
@@ -82,8 +83,22 @@ def draw_info(img, trajectory, traj_proj, framenum, color):
         cv2.circle(img, (traj_proj[check_frame5-1][0], traj_proj[check_frame5-1][1]), 3, (0,0,255), -1)
         cv2.putText(img, 'Middle: ' + str(trajectory[check_frame5][0]) + ':' + str(trajectory[check_frame5][1]), (15, 170), cv2.FONT_HERSHEY_SIMPLEX, 0.35, color, 1, cv2.LINE_AA)
 
+def set_paths(sub_folder):
+    output_path = ''
+    input_path = ''
+    if os.name == 'nt':
+        print("Running system is Win10")
+        output_path = r'D:\\Dropbox\\work\\Aikia\\EyeTracker\\footage\\render\\' + sub_folder + r'\\'
+        # output_path = r'D:\\Dropbox\\work\\Aikia\\EyeTracker\\footage\\render\\' + sub_folder + r'\\'
+        input_path = r'D:\\Dropbox\\work\\Aikia\\EyeTracker\\footage\\render\\' + sub_folder + r'\\'
 
+    elif os.name == 'posix':
+        print("Running system is OSX")
+        output_path = '/Users/frankfurt/Dropbox/work/Aikia/EyeTracker/footage/render/' + sub_folder + '/'
+        input_path = '/Users/frankfurt/Dropbox/work/Aikia/EyeTracker/footage/render/' + sub_folder + '/'
+        # input_path = '/Users/frankfurt/Dropbox/work/Aikia/EyeTracker/footage/' + sub_folder + '/'
 
+    return input_path, output_path
 
 #______________________________________________________________________________________________________
 
@@ -92,14 +107,11 @@ test_person = 'me02'
 #test_person = 'marie01'
 #test_person = 'marie02'
 
-render_folder = '/Users/frankfurt/Dropbox/work/Aikia/EyeTracker/footage/render/' + test_person + '/'
-footage_folder = '/Users/frankfurt/Dropbox/work/Aikia/EyeTracker/footage/render/' + test_person + '/'
-
-#footage_folder = '/Users/frankfurt/Dropbox/work/Aikia/EyeTracker/footage/' + test_person + '/'
 
 footage_file_name = test_person + '_eye_tracked.0003.avi'
 render_file_name = test_person + '_eyeDot_tracked.0003.avi'
 
+footage_folder, render_folder = set_paths(test_person)
 
 video_cap = cv2.VideoCapture(footage_folder + footage_file_name)
 
@@ -115,6 +127,8 @@ video_out_tracked_dlib = cv2.VideoWriter(render_folder + render_file_name, video
                                          (int(video_width * video_scale), int(video_height * video_scale)))
 
 video_frame_count = int(video_cap.get(cv2.CAP_PROP_FRAME_COUNT))
+
+
 
 prev_pos = [0, 0]
 curr_pos = [0, 0]

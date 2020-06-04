@@ -47,7 +47,7 @@ def draw_axis(img, R, t, K):
     return img
 
 
-calib_filename = 'config/calibData_camL_720p.xml'
+calib_filename = '../config/calibData_camL_720p.xml'
 
 camera_matrix_np = load_from_opencv_xml(calib_filename, "KMatCam1")
 dist_coeffs_np = np.zeros((4, 1))
