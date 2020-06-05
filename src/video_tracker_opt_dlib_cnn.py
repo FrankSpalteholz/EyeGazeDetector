@@ -7,7 +7,7 @@ import data_io
 
 def lin_smooth(data, stop, iterations, return_new_list=True):
     """
-    You were chainging input-data. I moved the list copy in this method,
+    You were changing input-data. I moved the list copy in this method,
     as it make more sense in my opinion. Anyway, there is a flag, so you can
     use it either way
 
@@ -93,6 +93,10 @@ class StereoLandmarks:
             self._y = value
 
     class Data:
+        """
+        Some hardcoded data found in the script. I have no idea, if need
+        to stay hardcoded. Probably at some point not any more.
+        """
         left = [42, 43, 44, 45, 46, 47]   # starting from inner corner -> up
         right = [36, 37, 38, 39, 40, 41]  # starting from outer corner -> up
 
@@ -183,6 +187,7 @@ class TestPersonPlot:
         detector = dlib.get_frontal_face_detector()
         predictor = dlib.shape_predictor(self.predictor_path)
 
+        # WTF? found no usage for them, but here you are :D
         frame = self.get_frame()
         roi_r_eye_frame = frame
         roi_l_eye_frame = frame
@@ -203,9 +208,6 @@ class TestPersonPlot:
             for face in faces:
                 self.landmarks.append(predictor(gray, face))
 
-    def prepare_plotter(self):
-        pass
-
     def plot_data(self, right=True, left=True, show=True, save_img=False):
         subplots = (int(right) + int(left)) * 2
 
@@ -214,11 +216,6 @@ class TestPersonPlot:
                 'Neither ``right`` nor ``left`` is set to ``True``. '
                 'Nothing to plot.'
             )
-
-        if save_img:
-            # Hey when you like it, you can remove the if statement and use
-            # these settings or even improve them ;)
-            self.prepare_plotter()
 
         fig, axs = plt.subplots(subplots)
         frame_num = self.video_frame_count - 2
@@ -260,8 +257,12 @@ class TestPersonPlot:
         if save_img:
             # You could generate a picture / pdf here...
             # It should work. Can't test anything here :D
+            plt.legend()
+            plt.grid()
+            plt.tight_layout()
             plt.savefig(self.Config.exp_file, dpi=300)
             plt.close()
+            print(f'Plot file exported to "{self.Config.exp_file}".')
 
     # - Video data properties and methods ----------------------------------- #
     def get_frame(self):
