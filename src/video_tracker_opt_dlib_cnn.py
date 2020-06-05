@@ -10,7 +10,9 @@ import sys
 import importlib
 
 module = input('data_io')
-data_io = __import__(module)
+# data_io = __import__(module)
+import data_io
+
 
 
 plt.style.use('seaborn-whitegrid')
@@ -58,7 +60,8 @@ render_r_eye_file_name = test_person + '_eye_r_tracked.0001.avi'
 #     return input_path, output_path, conf_path, data_out_path
 
 
-footage_folder, render_folder, config_path, data_path = data_io.set_paths(test_person)
+# footage_folder, render_folder, config_path, data_path = data_io.set_paths(test_person)
+footage_folder, render_folder, config_path, data_path = data_io.get_paths(test_person)
 
 predictor_file_path = config_path + 'shape_predictor_68_face_landmarks.dat'
 
