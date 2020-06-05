@@ -1,23 +1,26 @@
 import os
 
-def set_paths(sub_folder):
-    output_path = ''
-    input_path = ''
+
+_OS_ROOT = {
+    'nt': 'D:/Dropbox/work/Aikia/EyeTracker',
+    'posix': '/Users/frankfurt/Dropbox/work/Aikia/EyeTracker'
+}
+
+
+def get_paths(sub_folder):
+    root = _OS_ROOT.get(os.name)
+    if not root:
+        raise RuntimeError('Current OS "{}" is not supported.'.format(root))
+
     if os.name == 'nt':
-        print("Running system is Win10")
-        output_path = r'D:\\Dropbox\\work\\Aikia\\EyeTracker\\footage\\render\\' + sub_folder + r'\\'
-        # output_path = r'D:\\Dropbox\\work\\Aikia\\EyeTracker\\footage\\render\\' + sub_folder + r'\\'
-        # input_path = r'D:\\Dropbox\\work\\Aikia\\EyeTracker\\footage\\' + sub_folder + r'\\'
-        input_path = r'D:\\Dropbox\\work\\Aikia\\EyeTracker\\footage\\render\\' + sub_folder + r'\\'
-        conf_path = r'D:\\Dropbox\\work\\Aikia\\EyeTracker\\config\\'
-        data_out_path = r'D:\\Dropbox\\work\\Aikia\\EyeTracker\\config\\' + sub_folder + r'\\'
+        root = root.replace('/', '\\')
 
-    elif os.name == 'posix':
-        print("Running system is OSX")
-        output_path = '/Users/frankfurt/Dropbox/work/Aikia/EyeTracker/footage/render/' + sub_folder + '/'
-        input_path = '/Users/frankfurt/Dropbox/work/Aikia/EyeTracker/footage/render/' + sub_folder + '/'
-        # input_path = '/Users/frankfurt/Dropbox/work/Aikia/EyeTracker/footage/' + sub_folder + '/'
-        conf_path = '/Users/frankfurt/Dropbox/work/Aikia/EyeTracker/config/'
-        data_out_path = conf_path + '/data/' + sub_folder + '/'
+    io_path = os.path.join(root, 'footage', 'render', sub_folder) + os.sep
+    conf_path = os.path.join(root, 'config') + os.sep
+    data_out_path = os.path.join(root, sub_folder) + os.sep
 
-    return input_path, output_path, conf_path, data_out_path
+    return io_path, io_path, conf_path, data_out_path
+
+
+if __name__ == '__main__':
+    print(get_paths('blub'))
