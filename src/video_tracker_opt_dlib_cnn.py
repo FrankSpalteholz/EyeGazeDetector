@@ -1,113 +1,28 @@
 import cv2
-import numpy as np
 import dlib
-import time
-import os
-import xml.etree.ElementTree as ET
 import matplotlib.pyplot as plt
-import sys
-
-import importlib
-
-module = input('data_io')
-# data_io = __import__(module)
+import os
 import data_io
 
 
+def lin_smooth(data, stop, iterations, return_new_list=True):
+    """
+    You were chainging input-data. I moved the list copy in this method,
+    as it make more sense in my opinion. Anyway, there is a flag, so you can
+    use it either way
 
-plt.style.use('seaborn-whitegrid')
-from scipy.optimize import curve_fit
+    Args:
+        data:
+        stop:
+        iterations:
+        return_new_list:
 
-# _________________________________________________________________________________________________________
+    Returns:
 
+    """
+    if return_new_list:
+        data = data.copy()
 
-# test_person = 'me'
-test_person = 'me02'
-# test_person = 'marie01'
-# test_person = 'marie02'
-
-# render_folder = '/Users/frankfurt/Dropbox/work/Aikia/EyeTracker/footage/render/' + test_person + '/'
-# footage_folder = '/Users/frankfurt/Dropbox/work/Aikia/EyeTracker/footage/render/' + test_person + '/'
-
-# footage_folder = '/Users/frankfurt/Dropbox/work/Aikia/EyeTracker/footage/' + test_person + '/'
-
-footage_file_name = test_person + '_processed.0002.avi'
-render_file_name = test_person + '_tracked.0001.avi'
-render_l_eye_file_name = test_person + '_eye_l_tracked.0001.avi'
-render_r_eye_file_name = test_person + '_eye_r_tracked.0001.avi'
-
-#
-# def set_paths(sub_folder):
-#     output_path = ''
-#     input_path = ''
-#     if os.name == 'nt':
-#         print("Running system is Win10")
-#         output_path = r'D:\\Dropbox\\work\\Aikia\\EyeTracker\\footage\\render\\' + sub_folder + r'\\'
-#         # output_path = r'D:\\Dropbox\\work\\Aikia\\EyeTracker\\footage\\render\\' + sub_folder + r'\\'
-#         # input_path = r'D:\\Dropbox\\work\\Aikia\\EyeTracker\\footage\\' + sub_folder + r'\\'
-#         input_path = r'D:\\Dropbox\\work\\Aikia\\EyeTracker\\footage\\render\\' + sub_folder + r'\\'
-#         conf_path = r'D:\\Dropbox\\work\\Aikia\\EyeTracker\\config\\'
-#         data_out_path = r'D:\\Dropbox\\work\\Aikia\\EyeTracker\\config\\' + sub_folder + r'\\'
-#
-#     elif os.name == 'posix':
-#         print("Running system is OSX")
-#         output_path = '/Users/frankfurt/Dropbox/work/Aikia/EyeTracker/footage/render/' + sub_folder + '/'
-#         input_path = '/Users/frankfurt/Dropbox/work/Aikia/EyeTracker/footage/render/' + sub_folder + '/'
-#         # input_path = '/Users/frankfurt/Dropbox/work/Aikia/EyeTracker/footage/' + sub_folder + '/'
-#         conf_path = '/Users/frankfurt/Dropbox/work/Aikia/EyeTracker/config/'
-#         data_out_path = conf_path + '/data/' + sub_folder + '/'
-#
-#     return input_path, output_path, conf_path, data_out_path
-
-
-# footage_folder, render_folder, config_path, data_path = data_io.set_paths(test_person)
-footage_folder, render_folder, config_path, data_path = data_io.get_paths(test_person)
-
-predictor_file_path = config_path + 'shape_predictor_68_face_landmarks.dat'
-
-lmarks_left_eye = [42, 43, 44, 45, 46, 47]  # starting from inner corner -> up
-lmarks_right_eye = [36, 37, 38, 39, 40, 41]  # starting from outer corner -> up
-
-curr_lmpoints_r_eye_x = []
-curr_lmpoints_r_eye_y = []
-curr_lmpoints_l_eye_x = []
-curr_lmpoints_l_eye_y = []
-
-roi_eye_offset_x = 130
-roi_eye_offset_y = 80
-
-roi_eye_damping = 1.0
-
-is_denoised = 1
-is_contrast_improved = 1
-is_stabilized = 1
-scale = 0.5
-
-is_full_frame_render = 1
-is_eye_render = 1
-is_full_frame_show = 0
-is_eye_frame_show = 1
-
-
-def display_infos(img, current_fps):
-    font_color = (0, 0, 0)
-    cv2.putText(img, 'fps: ' + str(float("{:.2f}".format(current_fps))), (10, 30),
-                cv2.FONT_HERSHEY_SIMPLEX, 0.5, font_color, 1, cv2.LINE_AA)
-
-    cv2.putText(img, 'roi_eye_damping: ' + str(float("{:.2f}".format(roi_eye_damping))), (10, 50),
-                cv2.FONT_HERSHEY_SIMPLEX, 0.5, font_color, 1, cv2.LINE_AA)
-
-    cv2.putText(img, 'denoised: ' + 'using NlMean ' + str(is_denoised), (10, 70),
-                cv2.FONT_HERSHEY_SIMPLEX, 0.5, font_color, 1, cv2.LINE_AA)
-
-    cv2.putText(img, 'contrast improved: ' + 'using CLAHE ' + str(is_contrast_improved), (10, 90),
-                cv2.FONT_HERSHEY_SIMPLEX, 0.5, font_color, 1, cv2.LINE_AA)
-
-    cv2.putText(img, 'stabilized: ' + str(is_stabilized), (10, 110),
-                cv2.FONT_HERSHEY_SIMPLEX, 0.5, font_color, 1, cv2.LINE_AA)
-
-
-def lin_smooth(data, stop, iterations):
     for it in range(iterations):
         for n in range(stop - 2):
             if n > 1:
@@ -115,200 +30,305 @@ def lin_smooth(data, stop, iterations):
     return data
 
 
-def calc_eyes_roi(track_data_l, track_data_r, timestep, roi_offset_x, roi_offset_y):
-    roi_list = []
-    tmp_list = []
-    # roi_r_eye_x \
-    tmp_list.append(int(track_data_r[0][timestep] - roi_offset_x))
-    # roi_r_eye_y \
-    tmp_list.append(int(track_data_r[1][timestep] - roi_offset_y))
-    roi_list.append(tmp_list)
+class StereoLandmarks:
+    """
+    Utility class for storing eye landmarks data. Take a look at heavy
+    property usage. The syntax is a bit clunky, but you get used to it.
 
-    tmp_list = []
-    # roi_l_eye_x \
-    tmp_list.append(int(track_data_l[0][timestep] + roi_offset_x))
-    # roi_l_eye_y \
-    tmp_list.append(int(track_data_l[1][timestep] - roi_offset_y))
-    roi_list.append(tmp_list)
+    To generate a "prop-skeleton" in PyCharm, try typing "prop" or "props"
+    and hitting Enter. Pycharm should create a template for you to fill in your
+    filthy code ;) There is a red border around your typing caret, which means,
+    you are typing in multiple places simultaneously. Just hit "Tab" after
+    you've finished, to apply the name across multiple occurrences.
+    (Hitting enter could paste in some weired auto-complete non-sense).
 
-    tmp_list = []
-    # roi_r_eye_x2 \
-    tmp_list.append(int(track_data_r[0][timestep] + roi_offset_x / 5))
-    # roi_r_eye_y2 \
-    tmp_list.append(int(track_data_r[1][timestep] + roi_offset_y))
-    roi_list.append(tmp_list)
+    Example (Letter "I" represents the caret occurrences):
 
-    tmp_list = []
-    # roi_l_eye_x2 \
-    tmp_list.append(int(track_data_l[0][timestep] - roi_offset_x / 5))
+        >>> @property
+        >>> def I(self):
+        >>>     return
 
-    # roi_l_eye_y2 \
-    tmp_list.append(int(track_data_l[1][timestep] + roi_offset_y))
-    roi_list.append(tmp_list)
+        >>> @I.setter
+        >>> def (self, value):
+        >>>     pass
 
-    return roi_list
+    Python properties are just like the properties in C# but with a horrible
+    syntax. Bless PyCharm for creating presets for such an non-sense
 
+    Feel free to test few other PyCharm templates. I also use these ones:
+        - main - Creates ``if __name__ == '__main__':``
+        - super - Creates a super call in a class. super(ClassName, self).__init__()
 
-def display_track_shapes(img, framenum, data_r_track, data_l_track, roi_eyes_pos):
-    cv2.circle(img, (int(data_r_track[0][framenum]), int(data_r_track[1][framenum])), 4, (255, 255, 255), -1)
-    cv2.circle(img, (int(data_l_track[0][framenum]), int(data_l_track[1][framenum])), 4, (255, 255, 255), -1)
+    """
 
-    cv2.line(img, ((int(data_r_track[0][framenum]), int(data_r_track[1][framenum]))),
-             ((int(data_l_track[0][framenum]), int(data_l_track[1][framenum]))), (255, 255, 255), 1)
-    cv2.putText(img, 'Baseline: ' + str(int((data_l_track[0][framenum] - data_r_track[0][framenum]) / 2)),
-                (int((data_l_track[0][framenum] - data_r_track[0][framenum]) / 4 + data_r_track[0][
-                    framenum]),
-                 int((data_l_track[1][framenum] - data_r_track[1][framenum]) / 2 + data_l_track[1][
-                     framenum] - 10)),
-                cv2.FONT_HERSHEY_SIMPLEX, 0.35, (255, 255, 255), 1, cv2.LINE_AA)
+    class _Eye:
+        """
+        Utility subclass. This kind of shit is also possible.
 
-    cv2.putText(img, 'Baseline: ' + str(int((data_l_track[0][framenum] - data_r_track[0][framenum]) / 2)),
-                (100, 100),
-                cv2.FONT_HERSHEY_SIMPLEX, 0.35, (255, 255, 255), 1, cv2.LINE_AA)
+        It has an underscore prefix to make it "protected".
+        I know, we are in python, and there is no "protected" or "private",
+        but! it's a **convention**, which PyCharm is making use of.
+        The class will not be listed in an auto-complete list,
+        until you've typed in like 70% of it's name.
+        """
 
-    cv2.rectangle(img, (roi_eyes_pos[0][0], roi_eyes_pos[0][1]), (roi_eyes_pos[2][0], roi_eyes_pos[2][1]),
-                  (255, 255, 255), 1)
-    cv2.rectangle(img, (roi_eyes_pos[1][0], roi_eyes_pos[1][1]), (roi_eyes_pos[3][0], roi_eyes_pos[3][1]),
-                  (255, 255, 255), 1)
+        def __init__(self):
+            self._x = list()
+            self._y = list()
 
+        @property
+        def x(self):
+            return self._x
 
-def main(args=None):
-    if args is None:
-        args = sys.argv[1:]
+        @x.setter
+        def x(self, value):
+            self._x = value
 
-    video_cap = cv2.VideoCapture(footage_folder + footage_file_name)
+        @property
+        def y(self):
+            return self._y
 
-    video_frame_count = int(video_cap.get(cv2.CAP_PROP_FRAME_COUNT))
-    video_width = int(video_cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-    video_height = int(video_cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-    video_fps = int(video_cap.get(cv2.CAP_PROP_FPS))
+        @y.setter
+        def y(self, value):
+            self._y = value
 
-    video_out_codec = cv2.VideoWriter_fourcc(*'MJPG')
-    video_out_tracked = cv2.VideoWriter(render_folder + render_file_name, video_out_codec, video_fps,
-                                        (int(video_width * scale), int(video_height * scale)))
+    class Data:
+        left = [42, 43, 44, 45, 46, 47]   # starting from inner corner -> up
+        right = [36, 37, 38, 39, 40, 41]  # starting from outer corner -> up
 
-    video_out_eye_l_tracked = cv2.VideoWriter()
-    video_out_eye_r_tracked = cv2.VideoWriter()
+    def __init__(self):
+        self._left = self._Eye()
+        self._right = self._Eye()
 
-    print('______________________________________________________________')
-    print('Video to track: ', footage_file_name)
-    print('Input video width: ', video_width)
-    print('Input video height: ', video_height)
-    print('______________________________________________________________')
+    def append(self, landmarks):
+        self.right.x.append(landmarks.part(self.Data.right[3]).x)
+        self.right.y.append(landmarks.part(self.Data.right[3]).y)
 
-    detector = dlib.get_frontal_face_detector()
-    predictor = dlib.shape_predictor(predictor_file_path)
+        self.left.x.append(landmarks.part(self.Data.left[0]).x)
+        self.left.y.append(landmarks.part(self.Data.left[0]).y)
 
-    _, frame = video_cap.read()
-    roi_r_eye_frame = frame
-    roi_l_eye_frame = frame
+    @property
+    def left(self):
+        return self._left
 
-    # reset stream to first frame
-    video_cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
+    @left.setter
+    def left(self, value):
+        self._left = value
 
-    # ______________________________________________________________________________________________
-    # face landmark detection
+    @property
+    def right(self):
+        return self._right
 
-    for framenum in range((video_frame_count - 2)):
-        # for framenum in range(100):
-
-        start_time = time.time()
-
-        success, frame = video_cap.read()
-        if not success:
-            break
-        frame = cv2.resize(frame, ((int(video_width * scale), int(video_height * scale))))
-        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-
-        faces = detector(gray)
-        for face in faces:
-            landmarks = predictor(gray, face)
-            curr_lmpoints_r_eye_x.append(landmarks.part(lmarks_right_eye[3]).x)
-            curr_lmpoints_r_eye_y.append(landmarks.part(lmarks_right_eye[3]).y)
-            curr_lmpoints_l_eye_x.append(landmarks.part(lmarks_left_eye[0]).x)
-            curr_lmpoints_l_eye_y.append(landmarks.part(lmarks_left_eye[0]).y)
-
-    # ______________________________________________________________________________________________
-
-    x = curr_lmpoints_r_eye_x.copy()
-    y = curr_lmpoints_r_eye_y.copy()
-
-    lmark_r_eye_track_x = lin_smooth(curr_lmpoints_r_eye_x, framenum, 9)
-    lmark_r_eye_track_y = lin_smooth(curr_lmpoints_r_eye_y, framenum, 9)
-    lmark_l_eye_track_x = lin_smooth(curr_lmpoints_l_eye_x, framenum, 9)
-    lmark_l_eye_track_y = lin_smooth(curr_lmpoints_l_eye_y, framenum, 9)
-
-    fig, axs = plt.subplots(2)
-    fig.suptitle('x-y motion landmark[3]')
-    axs[0].plot(x, 'tab:red', lmark_r_eye_track_x, 'tab:green')
-    axs[1].plot(y, 'tab:green', lmark_r_eye_track_y, 'tab:orange')
-
-    plt.show()
-    #
-    # # _____________________________________________________________________________________________
-    #
-    # # Reset stream to first frame
-    # video_cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
-    #
-    # # Write n_frames-1 transformed frames
-    # for framenum in range(video_frame_count - 4):
-    #     # for framenum in range(94):
-    #     # Read next frame
-    #     success, frame = video_cap.read()
-    #     if not success:
-    #         break
-    #
-    #     frame = cv2.resize(frame, ((int(video_width * scale), int(video_height * scale))))
-    #
-    #     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-    #
-    #     roi_eyes_pos = calc_eyes_roi((lmark_l_eye_track_x, lmark_l_eye_track_y), (lmark_r_eye_track_x, lmark_r_eye_track_y),
-    #                                  framenum, roi_eye_offset_x, roi_eye_offset_y)
-    #
-    #     display_track_shapes(frame, framenum, (lmark_r_eye_track_x, lmark_r_eye_track_y),
-    #                          (lmark_l_eye_track_x, lmark_l_eye_track_y), roi_eyes_pos)
-    #
-    #     print(roi_eyes_pos)
-    #
-    #     roi_r_eye_frame = gray[roi_eyes_pos[0][1]:roi_eyes_pos[2][1], roi_eyes_pos[0][0]:roi_eyes_pos[2][0]].copy()
-    #     roi_l_eye_frame = gray[roi_eyes_pos[1][1]:roi_eyes_pos[3][1], roi_eyes_pos[3][0]:roi_eyes_pos[1][0]].copy()
-    #
-    #     eye_rect_size = [abs(roi_eyes_pos[0][0] - roi_eyes_pos[2][0]), abs(roi_eyes_pos[0][1] - roi_eyes_pos[2][1])]
-    #
-    #     # print(eye_rect_size)
-    #
-    #     # print(eye_tracking_rect_size)
-    #     if framenum == 1:
-    #         video_out_eye_l_tracked = cv2.VideoWriter(render_folder + render_l_eye_file_name,
-    #                                                   video_out_codec, video_fps, (eye_rect_size[0], eye_rect_size[1]))
-    #         video_out_eye_r_tracked = cv2.VideoWriter(render_folder + render_r_eye_file_name,
-    #                                                   video_out_codec, video_fps, (eye_rect_size[0], eye_rect_size[1]))
-    #
-    #     # #
-    #     # #     roi_r_eye_x += int(((int(((float(prev_lmpoints_r_eye[3][0]) + float(curr_lmpoints_r_eye[3][0])) / 2)) + roi_eye_offset_x) - roi_r_eye_x) * roi_eye_damping)
-    #     # #     roi_r_eye_y += int(((int(((float(prev_lmpoints_r_eye[3][1]) + float(curr_lmpoints_r_eye[3][1])) / 2)) + roi_eye_offset_y) - roi_r_eye_y) * roi_eye_damping)
-    #     # #
-    #     #
-    #     #
-    #
-    #     current_fps = 1.0 / (time.time() - start_time)
-    #     display_infos(current_fps)
-    #
-    #     if is_eye_render:
-    #         if framenum > 1:
-    #             if is_eye_frame_show:
-    #                 cv2.imshow("eye detection dlib", cv2.hconcat([roi_r_eye_frame, roi_l_eye_frame]))
-    #                 # cv2.imshow("eye detection dlib", roi_l_eye_frame)
-    #             video_out_eye_r_tracked.write(cv2.cvtColor(roi_r_eye_frame, cv2.COLOR_GRAY2BGR))
-    #             video_out_eye_l_tracked.write(cv2.cvtColor(roi_l_eye_frame, cv2.COLOR_GRAY2BGR))
-    #
-    #     if is_full_frame_render:
-    #         if is_full_frame_show:
-    #             cv2.imshow("face detection dlib", frame)
-    #         video_out_tracked.write(frame)
-    #
-    #     cv2.waitKey(1)
+    @right.setter
+    def right(self, value):
+        self._right = value
 
 
-if __name__ == "__main__":
-    main()
+class TestPersonPlot:
+
+    class Config:
+        suffix_footage = '_processed.0002.avi'
+        suffix_render = '_tracked.0001.avi'
+        suffix_eye = '_eye_{side}_tracked.0001.avi'
+
+        file_predictor = 'shape_predictor_68_face_landmarks.dat'
+
+        roi_eye_offset_x = 130
+        roi_eye_offset_y = 80
+
+        roi_eye_damping = 1.0
+
+        is_denoised = 1
+        is_contrast_improved = 1
+        is_stabilized = 1
+        scale = 0.5
+
+        is_full_frame_render = 1
+        is_eye_render = 1
+        is_full_frame_show = 0
+        is_eye_frame_show = 1
+
+        iterations = 9
+
+        exp_file = os.path.join(os.path.dirname(__file__), 'PLOT.png')
+
+    def __init__(self, test_person, verbose=True):
+        plt.style.use('seaborn-whitegrid')
+
+        self.test_person = test_person
+        self.verbose = verbose
+        self.landmarks = StereoLandmarks()
+
+        self.video_cap = cv2.VideoCapture(self.footage_path)
+        self.video_codec = cv2.VideoWriter_fourcc(*'MJPG')
+
+        self.video_tracked = cv2.VideoWriter(
+            self.render_path,
+            self.video_codec,
+            self.video_fps,
+            self.video_size_scaled
+        )
+
+        if self.verbose:
+            self.print_report_video_capture()
+
+    def print_report_video_capture(self):
+        print('-' * 100)
+        print(f'Video to track: {self.footage_file}\n'
+              f'Input video width: {self.video_size.get("width")}\n'
+              f'Input video height: {self.video_size.get("height")}')
+        print('-' * 100)
+
+    def face_landmark_detection(self):
+        detector = dlib.get_frontal_face_detector()
+        predictor = dlib.shape_predictor(self.predictor_path)
+
+        frame = self.get_frame()
+        roi_r_eye_frame = frame
+        roi_l_eye_frame = frame
+
+        self.reset_stream()
+
+        for fnum in range(self.video_frame_count - 2):
+            success, frame = self.video_cap.read()
+            if not success:
+                break
+
+            frame = cv2.resize(frame, self.video_size_scaled)
+            gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+
+            # Wooow! what a weired syntax! WTF is this ``detector``?
+            # Pointer to a class or method? Same with ``predictor``?
+            faces = detector(gray)
+            for face in faces:
+                self.landmarks.append(predictor(gray, face))
+
+    def prepare_plotter(self):
+        pass
+
+    def plot_data(self, right=True, left=True, show=True, save_img=False):
+        subplots = (int(right) + int(left)) * 2
+
+        if subplots == 0:
+            raise AttributeError(
+                'Neither ``right`` nor ``left`` is set to ``True``. '
+                'Nothing to plot.'
+            )
+
+        if save_img:
+            # Hey when you like it, you can remove the if statement and use
+            # these settings or even improve them ;)
+            self.prepare_plotter()
+
+        fig, axs = plt.subplots(subplots)
+        frame_num = self.video_frame_count - 2
+
+        if right:
+            x_smooth = lin_smooth(self.landmarks.right.x,
+                                  frame_num,
+                                  self.Config.iterations)
+            y_smooth = lin_smooth(self.landmarks.right.y,
+                                  frame_num,
+                                  self.Config.iterations)
+
+            axs[0].plot(self.landmarks.right.x, 'tab:red',
+                        x_smooth, 'tab:green')
+            axs[1].plot(self.landmarks.right.y, 'tab:green',
+                        y_smooth, 'tab:orange')
+
+        if left:
+            x_smooth = lin_smooth(self.landmarks.left.x,
+                                  frame_num,
+                                  self.Config.iterations)
+            y_smooth = lin_smooth(self.landmarks.left.y,
+                                  frame_num,
+                                  self.Config.iterations)
+
+            # I'm using negative indices here to be able to work no matter,
+            # whether the right side is being plotted or not
+            axs[-2].plot(self.landmarks.left.x, 'tab:yellow',
+                         x_smooth, 'tab:blur')
+            axs[-1].plot(self.landmarks.left.y, 'tab:blue',
+                         y_smooth, 'tab:magenta')
+
+        # Don't know, how you use the plotter colors/tabs, what so ever ;)
+        # Please double check, it's doing what it should :D
+
+        if show:
+            plt.show()
+
+        if save_img:
+            # You could generate a picture / pdf here...
+            # It should work. Can't test anything here :D
+            plt.savefig(self.Config.exp_file, dpi=300)
+            plt.close()
+
+    # - Video data properties and methods ----------------------------------- #
+    def get_frame(self):
+        return self.video_cap.read()[1]
+
+    def reset_stream(self):
+        self.video_cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
+
+    @property
+    def video_frame_count(self):
+        return int(self.video_cap.get(cv2.CAP_PROP_FRAME_COUNT))
+
+    @property
+    def video_fps(self):
+        return int(self.video_cap.get(cv2.CAP_PROP_FPS))
+
+    @property
+    def video_size(self):
+        return {
+            'height': int(self.video_cap.get(cv2.CAP_PROP_FRAME_WIDTH)),
+            'width': int(self.video_cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+        }
+
+    @property
+    def video_size_scaled(self):
+        return int(self.video_size.get('width') * self.Config.scale),\
+               int(self.video_size.get('height') * self.Config.scale)
+
+    # - Path properties ----------------------------------------------------- #
+    @property
+    def footage_file(self):
+        return self.test_person + self.Config.suffix_footage
+
+    @property
+    def footage_path(self):
+        return os.path.join(
+            data_io.get_paths(self.test_person).get('footage'),
+            self.footage_file
+        )
+
+    @property
+    def render_file(self):
+        return self.test_person + self.Config.suffix_render
+
+    @property
+    def render_path(self):
+        return os.path.join(
+            data_io.get_paths(self.test_person).get('footage'),
+            self.render_file
+        )
+
+    @property
+    def predictor_file(self):
+        return self.Config.file_predictor
+
+    @property
+    def predictor_path(self):
+        return os.path.join(
+            data_io.get_paths(self.test_person).get('config'),
+            self.predictor_file
+        )
+
+
+if __name__ == '__main__':
+    if os.name not in ('nt', 'posix'):
+        raise RuntimeError('Wrong OS. Exiting')
+
+    plotter = TestPersonPlot('me02')
+    plotter.face_landmark_detection()
+    plotter.plot_data()

@@ -15,10 +15,7 @@ def get_paths(sub_folder):
         sub_folder (str): Sub-folder path
 
     Returns:
-        tuple: 0 - input path
-               1 - output path
-               2 - configuration path
-               3 - data out path
+        dict: Keys: 'footage', 'config', 'out'
 
     """
 
@@ -33,15 +30,8 @@ def get_paths(sub_folder):
     if os.name == 'nt':
         root = root.replace('/', '\\')
 
-    # Build the paths. os.path.join always uses the correct os-separator.
-    # Appending correct os-separator to the end of string.
-    # For whatever reason :D
-    io_path = os.path.join(root, 'footage', 'render', sub_folder) + os.sep
-    conf_path = os.path.join(root, 'config') + os.sep
-    data_out_path = os.path.join(root, sub_folder) + os.sep
-
-    return io_path, io_path, conf_path, data_out_path
-
-
-if __name__ == '__main__':
-    print(get_paths('blub'))
+    return {
+        'footage': os.path.join(root, 'footage', 'render', sub_folder) + os.sep,
+        'config': os.path.join(root, 'config') + os.sep,
+        'out': os.path.join(root, sub_folder) + os.sep
+    }
