@@ -7,17 +7,19 @@ import data_io
 
 def lin_smooth(data, stop, iterations, return_new_list=True):
     """
-    You were changing input-data. I moved the list copy in this method,
+    You were changing input-data. I moved the list.copy in this method,
     as it make more sense in my opinion. Anyway, there is a flag, so you can
-    use it either way
+    use it either way.
 
     Args:
         data:
-        stop:
-        iterations:
-        return_new_list:
+        stop (int):
+        iterations (int):
+        return_new_list: Whether to copy incoming data or operate
+                         on existing list
 
     Returns:
+        list: smoothed out ``data``
 
     """
     if return_new_list:
@@ -94,7 +96,7 @@ class StereoLandmarks:
 
     class Data:
         """
-        Some hardcoded data found in the script. I have no idea, if need
+        Some hardcoded data found in the script. I have no idea, if it needs
         to stay hardcoded. Probably at some point not any more.
         """
         left = [42, 43, 44, 45, 46, 47]   # starting from inner corner -> up
@@ -136,27 +138,44 @@ class TestPersonPlot:
         suffix_eye = '_eye_{side}_tracked.0001.avi'
 
         file_predictor = 'shape_predictor_68_face_landmarks.dat'
+        file_plot_exp = os.path.join(os.path.dirname(__file__), 'PLOT.png')
 
-        roi_eye_offset_x = 130
-        roi_eye_offset_y = 80
-
-        roi_eye_damping = 1.0
-
-        is_denoised = 1
-        is_contrast_improved = 1
-        is_stabilized = 1
         scale = 0.5
-
-        is_full_frame_render = 1
-        is_eye_render = 1
-        is_full_frame_show = 0
-        is_eye_frame_show = 1
-
         iterations = 9
 
-        exp_file = os.path.join(os.path.dirname(__file__), 'PLOT.png')
+        # None of the following variables was used in the script at refactoring
+        # time. Maybe in one of the commented lines. I've just ignored them...
+        # But the static variables are still here, if you ever need them.
+        # If you need to change them dynamically, I would recomend to move them
+        # to the parent class. This one should only be used as
+        # a static config container
+
+        # roi_eye_offset_x = 130
+        # roi_eye_offset_y = 80
+        #
+        # roi_eye_damping = 1.0
+        #
+        # is_denoised = 1
+        # is_contrast_improved = 1
+        # is_stabilized = 1
+        #
+        # is_full_frame_render = 1
+        # is_eye_render = 1
+        # is_full_frame_show = 0
+        # is_eye_frame_show = 1
 
     def __init__(self, test_person, verbose=True):
+        """
+        Constructor method, which starts the video capture, as far as i can
+        understand, what I am doining here :D
+
+        Args:
+            test_person (str): Probably a subfolder name. Probanly
+                               a persons name?
+            verbose: Whether the script should print it's "progress". Feel
+                     free to use this variable more often down the line
+
+        """
         plt.style.use('seaborn-whitegrid')
 
         self.test_person = test_person
@@ -177,6 +196,13 @@ class TestPersonPlot:
             self.print_report_video_capture()
 
     def print_report_video_capture(self):
+        """
+        Prints the report about running video capture
+
+        Note: I'm using the new formatted-string syntax here.
+        It's available in Python 3.7+.
+
+        """
         print('-' * 100)
         print(f'Video to track: {self.footage_file}\n'
               f'Input video width: {self.video_size.get("width")}\n'
@@ -184,6 +210,10 @@ class TestPersonPlot:
         print('-' * 100)
 
     def face_landmark_detection(self):
+        """
+        Face landmark detection magic happens here.
+        I hope, I didn't forgot anything :D
+        """
         detector = dlib.get_frontal_face_detector()
         predictor = dlib.shape_predictor(self.predictor_path)
 
@@ -209,6 +239,16 @@ class TestPersonPlot:
                 self.landmarks.append(predictor(gray, face))
 
     def plot_data(self, right=True, left=True, show=True, save_img=False):
+        """
+        Plotting some eye data. You know better, what happens here :D
+
+        Args:
+            right (bool): Whether to plot **right** eye. Default: True
+            left (bool): Whether to plot **left** eye. Default: True
+            show (bool): Whether to show the graph. Default: True
+            save_img (bool): Whether to write an image file. Default: False
+
+        """
         subplots = (int(right) + int(left)) * 2
 
         if subplots == 0:
@@ -260,9 +300,9 @@ class TestPersonPlot:
             plt.legend()
             plt.grid()
             plt.tight_layout()
-            plt.savefig(self.Config.exp_file, dpi=300)
+            plt.savefig(self.Config.file_plot_exp, dpi=300)
             plt.close()
-            print(f'Plot file exported to "{self.Config.exp_file}".')
+            print(f'Plot file exported to "{self.Config.file_plot_exp}".')
 
     # - Video data properties and methods ----------------------------------- #
     def get_frame(self):
