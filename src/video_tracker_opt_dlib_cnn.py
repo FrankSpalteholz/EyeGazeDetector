@@ -6,14 +6,8 @@ import os
 import xml.etree.ElementTree as ET
 import matplotlib.pyplot as plt
 import sys
-
-import importlib
-
-module = input('data_io')
-# data_io = __import__(module)
 import data_io
-
-
+import json_io
 
 plt.style.use('seaborn-whitegrid')
 from scipy.optimize import curve_fit
@@ -26,39 +20,11 @@ test_person = 'me02'
 # test_person = 'marie01'
 # test_person = 'marie02'
 
-# render_folder = '/Users/frankfurt/Dropbox/work/Aikia/EyeTracker/footage/render/' + test_person + '/'
-# footage_folder = '/Users/frankfurt/Dropbox/work/Aikia/EyeTracker/footage/render/' + test_person + '/'
-
-# footage_folder = '/Users/frankfurt/Dropbox/work/Aikia/EyeTracker/footage/' + test_person + '/'
 
 footage_file_name = test_person + '_processed.0002.avi'
 render_file_name = test_person + '_tracked.0001.avi'
 render_l_eye_file_name = test_person + '_eye_l_tracked.0001.avi'
 render_r_eye_file_name = test_person + '_eye_r_tracked.0001.avi'
-
-#
-# def set_paths(sub_folder):
-#     output_path = ''
-#     input_path = ''
-#     if os.name == 'nt':
-#         print("Running system is Win10")
-#         output_path = r'D:\\Dropbox\\work\\Aikia\\EyeTracker\\footage\\render\\' + sub_folder + r'\\'
-#         # output_path = r'D:\\Dropbox\\work\\Aikia\\EyeTracker\\footage\\render\\' + sub_folder + r'\\'
-#         # input_path = r'D:\\Dropbox\\work\\Aikia\\EyeTracker\\footage\\' + sub_folder + r'\\'
-#         input_path = r'D:\\Dropbox\\work\\Aikia\\EyeTracker\\footage\\render\\' + sub_folder + r'\\'
-#         conf_path = r'D:\\Dropbox\\work\\Aikia\\EyeTracker\\config\\'
-#         data_out_path = r'D:\\Dropbox\\work\\Aikia\\EyeTracker\\config\\' + sub_folder + r'\\'
-#
-#     elif os.name == 'posix':
-#         print("Running system is OSX")
-#         output_path = '/Users/frankfurt/Dropbox/work/Aikia/EyeTracker/footage/render/' + sub_folder + '/'
-#         input_path = '/Users/frankfurt/Dropbox/work/Aikia/EyeTracker/footage/render/' + sub_folder + '/'
-#         # input_path = '/Users/frankfurt/Dropbox/work/Aikia/EyeTracker/footage/' + sub_folder + '/'
-#         conf_path = '/Users/frankfurt/Dropbox/work/Aikia/EyeTracker/config/'
-#         data_out_path = conf_path + '/data/' + sub_folder + '/'
-#
-#     return input_path, output_path, conf_path, data_out_path
-
 
 # footage_folder, render_folder, config_path, data_path = data_io.set_paths(test_person)
 footage_folder, render_folder, config_path, data_path = data_io.get_paths(test_person)
@@ -233,10 +199,11 @@ def main(args=None):
     x = curr_lmpoints_r_eye_x.copy()
     y = curr_lmpoints_r_eye_y.copy()
 
-    lmark_r_eye_track_x = lin_smooth(curr_lmpoints_r_eye_x, framenum, 9)
-    lmark_r_eye_track_y = lin_smooth(curr_lmpoints_r_eye_y, framenum, 9)
-    lmark_l_eye_track_x = lin_smooth(curr_lmpoints_l_eye_x, framenum, 9)
-    lmark_l_eye_track_y = lin_smooth(curr_lmpoints_l_eye_y, framenum, 9)
+    iterations = 9
+    lmark_r_eye_track_x = lin_smooth(curr_lmpoints_r_eye_x, framenum, iterations)
+    lmark_r_eye_track_y = lin_smooth(curr_lmpoints_r_eye_y, framenum, iterations)
+    lmark_l_eye_track_x = lin_smooth(curr_lmpoints_l_eye_x, framenum, iterations)
+    lmark_l_eye_track_y = lin_smooth(curr_lmpoints_l_eye_y, framenum, iterations)
 
     fig, axs = plt.subplots(2)
     fig.suptitle('x-y motion landmark[3]')
@@ -244,7 +211,29 @@ def main(args=None):
     axs[1].plot(y, 'tab:green', lmark_r_eye_track_y, 'tab:orange')
 
     plt.show()
-    #
+
+    path = '/Users/frankfurt/Dropbox/work/Aikia/EyeTracker/config/data/me02/'
+
+    json_io.save_np_to_json(np.array([lmark_r_eye_track_x, lmark_r_eye_track_y]), 'array', path + 'data.json')
+    json_io.save_np_to_json(np.array([x, y]), 'array', path + 'data_raw.json')
+
+
+    print('clean data:')
+    npdata = json_io.load_np_from_json(path + 'data.json', 'array')
+
+    print(npdata)
+    print(npdata.dtype)
+    print(npdata.size)
+    print(npdata.shape)
+
+    print('raw data:')
+    npdata = json_io.load_np_from_json(path + 'data_raw.json', 'array')
+
+    print(npdata)
+    print(npdata.dtype)
+    print(npdata.size)
+    print(npdata.shape)
+
     # # _____________________________________________________________________________________________
     #
     # # Reset stream to first frame
