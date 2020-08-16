@@ -1,9 +1,7 @@
 import cv2
-import numpy as np
 import dlib
 import time
 import os
-import xml.etree.ElementTree as ET
 
 # _________________________________________________________________________________________________________
 
@@ -18,9 +16,14 @@ test_person = 'me02'
 
 # footage_folder = '/Users/frankfurt/Dropbox/work/Aikia/EyeTracker/footage/' + test_person + '/'
 
-footage_file_name = test_person + '_processed.0001.avi'
-render_file_name = test_person + '_tracked.0001.avi'
-render_eye_file_name = test_person + '_eye_tracked.0001.avi'
+#footage_file_name = test_person + '_processed.0001.avi'
+#render_file_name = test_person + '_tracked.0001.avi'
+#render_eye_file_name = test_person + '_eye_tracked.0001.avi'
+
+footage_file_name = test_person + '_processed_small.0001.mov'
+render_file_name = test_person + '_tracked_small.0001.avi'
+render_eye_file_name = test_person + '_eye_tracked_small.0001.avi'
+
 
 predictor_file_path = '../config/shape_predictor_68_face_landmarks.dat'
 
@@ -130,8 +133,23 @@ for framenum in range(150):
     faces = detector(gray)
 
     for face in faces:
+
+        x1 = face.left()
+        y1 = face.top()
+        x2 = face.right()
+        y2 = face.bottom()
+        # cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 3)
+
+        landmarks = predictor(gray, face)
+
+        for n in range(0, 68):
+            x = landmarks.part(n).x
+            y = landmarks.part(n).y
+            cv2.circle(gray, (x, y), 4, (255, 0, 0), -1)
+
+
         if (framenum % 2 != 0):
-            landmarks = predictor(gray, face)
+            #landmarks = predictor(gray, face)
 
             new_lmpoints_r_eye = []
             for n in range(len(lmarks_right_eye)):
