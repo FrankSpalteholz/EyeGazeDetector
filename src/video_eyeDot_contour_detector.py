@@ -114,13 +114,14 @@ def set_paths(sub_folder):
 # ______________________________________________________________________________________________________
 
 # test_person = 'me'
-test_person = 'me02'
+#test_person = 'me02'
 # test_person = 'marie01'
 # test_person = 'marie02'
+test_person = 'gen'
 
 
-footage_file_name = test_person + '_eye_tracked.0003.avi'
-render_file_name = test_person + '_eyeDot_tracked.0003.avi'
+footage_file_name = test_person + '_eye_l_tracked.0001.avi'
+render_file_name = test_person + '_eyeDot_l_tracked.0003.avi'
 
 footage_folder, render_folder, config_path, data_path = set_paths(test_person)
 
@@ -131,7 +132,7 @@ video_width = int(video_cap.get(cv2.CAP_PROP_FRAME_WIDTH))
 video_height = int(video_cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
 video_fps = int(video_cap.get(cv2.CAP_PROP_FPS))
 
-video_scale = 2.0
+video_scale = 1
 
 video_out_codec = cv2.VideoWriter_fourcc(*'MJPG')
 video_out_tracked_dlib = cv2.VideoWriter(render_folder + render_file_name, video_out_codec, video_fps,
@@ -168,7 +169,7 @@ for framenum in range((video_frame_count - 2)):
 
     damping = 1.0
     color = (0, 225, 255)
-    color_traj = (255, 255, 255)
+    color_traj = (0, 0, 255)
 
     new_pos = [0, 0]
 
@@ -211,12 +212,12 @@ for framenum in range((video_frame_count - 2)):
 
     scale = 1.0
 
-    draw_mobile_grid(roi, int(58 * scale), int(104 * scale), 1.0, (grid_x_pos, grid_y_pos), 7, 4, True, color_traj, 1)
+    #draw_mobile_grid(roi, int(58 * scale), int(104 * scale), 1.0, (grid_x_pos, grid_y_pos), 7, 4, True, color_traj, 1)
     draw_trajectory(roi, trajectory, color_traj, 1, 1)
 
-    if framenum > 1:
-        draw_trajectory(roi, trajectory_proj, color_traj, 2, -1)
-        draw_info(roi, trajectory, trajectory_proj, framenum, color)
+    #if framenum > 1:
+        #draw_trajectory(roi, trajectory_proj, color_traj, 2, -1)
+        #draw_info(roi, trajectory, trajectory_proj, framenum, color)
 
     # cv2.imshow("Threshold", threshold)
     # cv2.imshow("gray roi", gray_roi)

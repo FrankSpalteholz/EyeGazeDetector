@@ -16,18 +16,21 @@ from scipy.optimize import curve_fit
 
 
 # test_person = 'me'
-test_person = 'me02'
+#est_person = 'me02'
+test_person = 'gen'
 # test_person = 'marie01'
 # test_person = 'marie02'
 
 
-footage_file_name = test_person + '_processed.0002.avi'
-render_file_name = test_person + '_tracked.0001.avi'
+footage_file_name = test_person + '.0001.mov'
+render_file_name = test_person + '_tracked_calib.0001.avi'
 render_l_eye_file_name = test_person + '_eye_l_tracked.0001.avi'
 render_r_eye_file_name = test_person + '_eye_r_tracked.0001.avi'
 
-# footage_folder, render_folder, config_path, data_path = data_io.set_paths(test_person)
 footage_folder, render_folder, config_path, data_path = data_io.get_paths(test_person)
+
+print('footage folder:' + footage_folder)
+print('render folder:' + render_folder)
 
 predictor_file_path = config_path + 'shape_predictor_68_face_landmarks.dat'
 
@@ -39,15 +42,15 @@ curr_lmpoints_r_eye_y = []
 curr_lmpoints_l_eye_x = []
 curr_lmpoints_l_eye_y = []
 
-roi_eye_offset_x = 130
-roi_eye_offset_y = 80
+roi_eye_offset_x = 260
+roi_eye_offset_y = 160
 
 roi_eye_damping = 1.0
 
 is_denoised = 1
 is_contrast_improved = 1
 is_stabilized = 1
-scale = 0.5
+scale = 1
 
 is_full_frame_render = 1
 is_eye_render = 1
@@ -83,6 +86,7 @@ def lin_smooth(data, stop, iterations):
 
 def calc_eyes_roi(track_data_l, track_data_r, timestep, roi_offset_x, roi_offset_y):
     roi_list = []
+
     tmp_list = []
     # roi_r_eye_x \
     tmp_list.append(int(track_data_r[0][timestep] - roi_offset_x))
@@ -188,7 +192,9 @@ def main(args=None):
 
         faces = detector(gray)
         for face in faces:
+
             landmarks = predictor(gray, face)
+
             curr_lmpoints_r_eye_x.append(landmarks.part(lmarks_right_eye[3]).x)
             curr_lmpoints_r_eye_y.append(landmarks.part(lmarks_right_eye[3]).y)
             curr_lmpoints_l_eye_x.append(landmarks.part(lmarks_left_eye[0]).x)
@@ -212,92 +218,103 @@ def main(args=None):
 
     plt.show()
 
-    path = '/Users/frankfurt/Dropbox/work/Aikia/EyeTracker/config/data/me02/'
-
-    json_io.save_np_to_json(np.array([lmark_r_eye_track_x, lmark_r_eye_track_y]), 'array', path + 'data.json')
-    json_io.save_np_to_json(np.array([x, y]), 'array', path + 'data_raw.json')
 
 
-    print('clean data:')
-    npdata = json_io.load_np_from_json(path + 'data.json', 'array')
+    # _____________________________________________________________________________________________
+    # SAVING DATA TO JSON
+    # _____________________________________________________________________________________________
+    # path = '/Users/frankfurt/Dropbox/work/Aikia/EyeTracker/config/data/me02/'
 
-    print(npdata)
-    print(npdata.dtype)
-    print(npdata.size)
-    print(npdata.shape)
+    # json_io.save_np_to_json(np.array([lmark_r_eye_track_x, lmark_r_eye_track_y]), 'array', path + 'data.json')
+    #json_io.save_np_to_json(np.array([x, y]), 'array', path + 'data_raw.json')
 
-    print('raw data:')
-    npdata = json_io.load_np_from_json(path + 'data_raw.json', 'array')
 
-    print(npdata)
-    print(npdata.dtype)
-    print(npdata.size)
-    print(npdata.shape)
+    # print('clean data:')
+    # npdata = json_io.load_np_from_json(path + 'data.json', 'array')
+    #
+    # print(npdata)
+    # print(npdata.dtype)
+    # print(npdata.size)
+    # print(npdata.shape)
+    #
+    # print('raw data:')
+    # npdata = json_io.load_np_from_json(path + 'data_raw.json', 'array')
+    #
+    # print(npdata)
+    # print(npdata.dtype)
+    # print(npdata.size)
+    # print(npdata.shape)
 
-    # # _____________________________________________________________________________________________
-    #
-    # # Reset stream to first frame
-    # video_cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
-    #
-    # # Write n_frames-1 transformed frames
-    # for framenum in range(video_frame_count - 4):
-    #     # for framenum in range(94):
-    #     # Read next frame
-    #     success, frame = video_cap.read()
-    #     if not success:
-    #         break
-    #
-    #     frame = cv2.resize(frame, ((int(video_width * scale), int(video_height * scale))))
-    #
-    #     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-    #
-    #     roi_eyes_pos = calc_eyes_roi((lmark_l_eye_track_x, lmark_l_eye_track_y), (lmark_r_eye_track_x, lmark_r_eye_track_y),
-    #                                  framenum, roi_eye_offset_x, roi_eye_offset_y)
-    #
-    #     display_track_shapes(frame, framenum, (lmark_r_eye_track_x, lmark_r_eye_track_y),
-    #                          (lmark_l_eye_track_x, lmark_l_eye_track_y), roi_eyes_pos)
-    #
-    #     print(roi_eyes_pos)
-    #
-    #     roi_r_eye_frame = gray[roi_eyes_pos[0][1]:roi_eyes_pos[2][1], roi_eyes_pos[0][0]:roi_eyes_pos[2][0]].copy()
-    #     roi_l_eye_frame = gray[roi_eyes_pos[1][1]:roi_eyes_pos[3][1], roi_eyes_pos[3][0]:roi_eyes_pos[1][0]].copy()
-    #
-    #     eye_rect_size = [abs(roi_eyes_pos[0][0] - roi_eyes_pos[2][0]), abs(roi_eyes_pos[0][1] - roi_eyes_pos[2][1])]
-    #
-    #     # print(eye_rect_size)
-    #
-    #     # print(eye_tracking_rect_size)
-    #     if framenum == 1:
-    #         video_out_eye_l_tracked = cv2.VideoWriter(render_folder + render_l_eye_file_name,
-    #                                                   video_out_codec, video_fps, (eye_rect_size[0], eye_rect_size[1]))
-    #         video_out_eye_r_tracked = cv2.VideoWriter(render_folder + render_r_eye_file_name,
-    #                                                   video_out_codec, video_fps, (eye_rect_size[0], eye_rect_size[1]))
-    #
-    #     # #
-    #     # #     roi_r_eye_x += int(((int(((float(prev_lmpoints_r_eye[3][0]) + float(curr_lmpoints_r_eye[3][0])) / 2)) + roi_eye_offset_x) - roi_r_eye_x) * roi_eye_damping)
-    #     # #     roi_r_eye_y += int(((int(((float(prev_lmpoints_r_eye[3][1]) + float(curr_lmpoints_r_eye[3][1])) / 2)) + roi_eye_offset_y) - roi_r_eye_y) * roi_eye_damping)
-    #     # #
-    #     #
-    #     #
-    #
-    #     current_fps = 1.0 / (time.time() - start_time)
-    #     display_infos(current_fps)
-    #
-    #     if is_eye_render:
-    #         if framenum > 1:
-    #             if is_eye_frame_show:
-    #                 cv2.imshow("eye detection dlib", cv2.hconcat([roi_r_eye_frame, roi_l_eye_frame]))
-    #                 # cv2.imshow("eye detection dlib", roi_l_eye_frame)
-    #             video_out_eye_r_tracked.write(cv2.cvtColor(roi_r_eye_frame, cv2.COLOR_GRAY2BGR))
-    #             video_out_eye_l_tracked.write(cv2.cvtColor(roi_l_eye_frame, cv2.COLOR_GRAY2BGR))
-    #
-    #     if is_full_frame_render:
-    #         if is_full_frame_show:
-    #             cv2.imshow("face detection dlib", frame)
-    #         video_out_tracked.write(frame)
-    #
-    #     cv2.waitKey(1)
+    # _____________________________________________________________________________________________
 
+    # Reset stream to first frame
+    video_cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
+
+    # Write n_frames-1 transformed frames
+    for framenum in range(video_frame_count - 4):
+        # for framenum in range(94):
+        # Read next frame
+        success, frame = video_cap.read()
+        if not success:
+            break
+
+        frame = cv2.resize(frame, ((int(video_width * scale), int(video_height * scale))))
+
+        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+
+        # LIN SMOOTH DATA
+
+        roi_eyes_pos = calc_eyes_roi((lmark_l_eye_track_x, lmark_l_eye_track_y), (lmark_r_eye_track_x, lmark_r_eye_track_y),
+                                     framenum, roi_eye_offset_x, roi_eye_offset_y)
+
+        display_track_shapes(frame, framenum, (lmark_r_eye_track_x, lmark_r_eye_track_y),
+                             (lmark_l_eye_track_x, lmark_l_eye_track_y), roi_eyes_pos)
+
+        # roi_eyes_pos = calc_eyes_roi((curr_lmpoints_l_eye_x, curr_lmpoints_l_eye_y),
+        #                              (curr_lmpoints_r_eye_x, curr_lmpoints_r_eye_y),
+        #                              framenum, roi_eye_offset_x, roi_eye_offset_y)
+        #
+        # display_track_shapes(frame, framenum, (curr_lmpoints_r_eye_x, curr_lmpoints_r_eye_y),
+        #                      (curr_lmpoints_l_eye_x, curr_lmpoints_l_eye_y), roi_eyes_pos)
+
+        print(roi_eyes_pos)
+
+        roi_r_eye_frame = gray[roi_eyes_pos[0][1]:roi_eyes_pos[2][1], roi_eyes_pos[0][0]:roi_eyes_pos[2][0]].copy()
+        roi_l_eye_frame = gray[roi_eyes_pos[1][1]:roi_eyes_pos[3][1], roi_eyes_pos[3][0]:roi_eyes_pos[1][0]].copy()
+
+        eye_rect_size = [abs(roi_eyes_pos[0][0] - roi_eyes_pos[2][0]), abs(roi_eyes_pos[0][1] - roi_eyes_pos[2][1])]
+
+
+        if framenum == 1:
+            video_out_eye_l_tracked = cv2.VideoWriter(render_folder + render_l_eye_file_name,
+                                                      video_out_codec, video_fps, (eye_rect_size[0], eye_rect_size[1]))
+            video_out_eye_r_tracked = cv2.VideoWriter(render_folder + render_r_eye_file_name,
+                                                      video_out_codec, video_fps, (eye_rect_size[0], eye_rect_size[1]))
+
+        # #
+        # #     roi_r_eye_x += int(((int(((float(prev_lmpoints_r_eye[3][0]) + float(curr_lmpoints_r_eye[3][0])) / 2)) + roi_eye_offset_x) - roi_r_eye_x) * roi_eye_damping)
+        # #     roi_r_eye_y += int(((int(((float(prev_lmpoints_r_eye[3][1]) + float(curr_lmpoints_r_eye[3][1])) / 2)) + roi_eye_offset_y) - roi_r_eye_y) * roi_eye_damping)
+        # #
+        #
+        #
+
+        # current_fps = 1.0 / (time.time() - start_time)
+        # display_infos(current_fps)
+
+        if is_eye_render:
+            if framenum > 1:
+                if is_eye_frame_show:
+                    cv2.imshow("eye detection dlib", cv2.hconcat([roi_r_eye_frame, roi_l_eye_frame]))
+                    # cv2.imshow("eye detection dlib", roi_l_eye_frame)
+                video_out_eye_r_tracked.write(cv2.cvtColor(roi_r_eye_frame, cv2.COLOR_GRAY2BGR))
+                video_out_eye_l_tracked.write(cv2.cvtColor(roi_l_eye_frame, cv2.COLOR_GRAY2BGR))
+
+        if is_full_frame_render:
+            if is_full_frame_show:
+                cv2.imshow("face detection dlib", frame)
+            video_out_tracked.write(frame)
+
+        cv2.waitKey(1)
 
 if __name__ == "__main__":
     main()

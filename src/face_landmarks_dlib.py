@@ -6,7 +6,7 @@ import data_io
 test_person = 'gen'
 footage_file_name = test_person + '.0001.mov'
 render_file_name =  test_person + '_tracked.0001.avi'
-scale = 0.5
+scale = 1.0
 
 
 # test_person = 'me02'
